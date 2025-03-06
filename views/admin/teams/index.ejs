@@ -12,7 +12,7 @@
         <div class="page-header">
             <h2>All Teams</h2>
             <div class="filters">
-                <select id="eventFilter">
+                <select id="eventFilter" onchange="filterTeams()">
                     <option value="">All Events</option>
                     <% events.forEach(event => { %>
                         <option value="<%= event._id %>"><%= event.name %></option>
@@ -49,179 +49,28 @@
                     </div>
 
                     <div class="team-card-actions">
-                        <button onclick="viewTeamDetails('<%= team._id %>')" class="btn btn-small">
+                        <a href="/admin/teams/<%= team._id %>" class="btn btn-small">
                             View Details
-                        </button>
+                        </a>
                     </div>
                 </div>
             <% }); %>
         </div>
     </div>
 
-    <%- include('../partials/modals') %>
-
     <script>
-    async function openTeamDetails(teamId) {
-        try {
-            const response = await fetch(`/admin/teams/${teamId}/details`);
-            if (!response.ok) throw new Error('Failed to fetch team details');
-            
-            const team = await response.json();
-            const modal = document.getElementById('teamDetailModal');
-            const content = document.getElementById('teamDetailContent');
-            
-            content.innerHTML = `
-                <h2>${team.name}</h2>
-                <div class="team-info">
-                    <p><strong>Event:</strong> ${team.eventRegistered ? team.eventRegistered.name : 'Not registered'}</p>
-                    ${team.registeredAt ? `<p><strong>Registered:</strong> ${new Date(team.registeredAt).toLocaleString()}</p>` : ''}
-                </div>
-                
-                <div class="members-list">
-                    <h3>Team Leader</h3>
-                    <div class="member leader">
-                        <img src="${team.teamLeader.picture}" alt="Leader">
-                        <div>
-                            <h4>${team.teamLeader.name}</h4>
-                            <p>${team.teamLeader.email}</p>
-                            <span class="badge ${team.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian'}">
-                                ${team.teamLeader.isIIESTian ? 'IIEST' : 'Non-IIEST'}
-                            </span>
-                        </div>
-                    </div>
-
-                    <h3>Members</h3>
-                    ${team.teamMembers.map(member => `
-                        <div class="member">
-                            <img src="${member.picture}" alt="Member">
-                            <div>
-                                <h4>${member.name}</h4>
-                                <p>${member.email}</p>
-                                <span class="badge ${member.isIIESTian ? 'iiestian' : 'non-iiestian'}">
-                                    ${member.isIIESTian ? 'IIEST' : 'Non-IIEST'}
-                                </span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-
-                ${team.paymentProof ? `
-                    <div class="payment-section">
-                        <h3>Payment Proof</h3>
-                        <button onclick="openPaymentProof('${team.paymentProof.url}')" class="btn">
-                            View Payment
-                        </button>
-                    </div>
-                ` : ''}
-            `;
-            
-            modal.style.display = 'block';
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to load team details');
-        }
-    }
-
-    function openPaymentProof(url) {
-        const modal = document.getElementById('paymentProofModal');
-        const img = document.getElementById('paymentProofImg');
-        img.src = url;
-        modal.style.display = 'block';
-    }
-
-    // Filter functionality
-    document.getElementById('eventFilter').onchange = function() {
-        const eventId = this.value;
-        document.querySelectorAll('.team-card').forEach(card => {
-            card.style.display = (!eventId || card.dataset.event === eventId) ? 'block' : 'none';
+    function filterTeams() {
+        const eventId = document.getElementById('eventFilter').value;
+        const teams = document.getElementsByClassName('team-card');
+        
+        Array.from(teams).forEach(team => {
+            if (!eventId || team.dataset.event === eventId) {
+                team.style.display = 'block';
+            } else {
+                team.style.display = 'none';
+            }
         });
-    };
-
-    // Close modal functionality
-    document.querySelectorAll('.modal .close').forEach(btn => {
-        btn.onclick = () => btn.closest('.modal').style.display = 'none';
-    });
-
-    window.onclick = (event) => {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
-        }
-    };
+    }
     </script>
-
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 24px;
-            width: 90%;
-            max-width: 800px;
-            position: relative;
-            border-radius: 12px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .close {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            font-size: 28px;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .member {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-        .member img {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-top: 4px;
-            background: #f3f4f6;
-        }
-
-        .team-info {
-            background: #f8fafc;
-            padding: 16px;
-            border-radius: 8px;
-            margin: 16px 0;
-        }
-
-        .payment-section {
-            margin-top: 16px;
-            padding: 16px;
-            background: #f0f9ff;
-            border-radius: 8px;
-            border: 1px solid #bae6fd;
-        }
-    </style>
 </body>
 </html>

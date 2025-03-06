@@ -28,7 +28,7 @@ router.get('/users/:id', adminAuth, adminController.getUserByIdPage);
 
 // Teams routes
 router.get('/teams', adminAuth, adminController.getAllTeamsPage);
-router.get('/teams/:id/details', adminAuth, adminController.getTeamById); // Add this line
+router.get('/teams/:id', adminAuth, adminController.getTeamByIdPage); // Add this line
 
 // Registrations routes
 router.get('/registrations', adminAuth, adminController.getAllRegistrationsPage);

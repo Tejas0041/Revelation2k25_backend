@@ -382,12 +382,22 @@ module.exports.getEventByIdPage = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
         if (!event) {
-            return res.status(404).send('Event not found');
+            return res.status(404).render('error', { 
+                title: 'Error',
+                error: 'Event not found' 
+            });
         }
-        res.render('admin/events/show', { event });
+        res.render('admin/events/show', { 
+            event,
+            title: event.name,
+            path: '/events'
+        });
     } catch (error) {
         console.error('Error fetching event:', error);
-        res.status(500).send('Error fetching event');
+        res.status(500).render('error', { 
+            title: 'Error',
+            error: 'Error fetching event details'
+        });
     }
 };
 
@@ -452,6 +462,45 @@ module.exports.getTeamById = async (req, res) => {
     } catch (error) {
         console.error('Error fetching team:', error);
         res.status(500).json({ message: 'Error fetching team details' });
+    }
+};
+
+exports.getTeamByIdPage = async (req, res) => {
+    try {
+        const team = await Team.findById(req.params.id)
+            .populate('teamLeader')
+            .populate('teamMembers');
+        
+        const registration = await EventRegistration.findOne({ teamId: team._id })
+            .populate('event');
+            
+        if (!team) {
+            return res.status(404).render('admin/error', { 
+                error: 'Team not found',
+                title: 'Error',
+                path: '/teams'
+            });
+        }
+
+        const teamData = {
+            ...team.toObject(),
+            eventRegistered: registration?.event || null,
+            registeredAt: registration?.registeredAt || null,
+            paymentProof: registration?.paymentProof || null
+        };
+
+        res.render('admin/teams/show', { 
+            team: teamData,
+            title: team.name,
+            path: '/teams'
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).render('admin/error', { 
+            error: 'Failed to load team details',
+            title: 'Error',
+            path: '/teams'
+        });
     }
 };
 

@@ -1,194 +1,146 @@
-<div class="admin-container">
-    <div class="page-header">
-        <h2>All Registrations</h2>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Registrations - Revelation 2k25</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <h2>All Registrations</h2>
+        </div>
 
-    <div class="registrations-table-container">
-        <table class="registrations-table">
-            <thead>
-                <tr>
-                    <th>Event</th>
-                    <th>Type</th>
-                    <th>Participant</th>
-                    <th>Registered At</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% registrations.forEach(reg => { %>
+        <div class="registrations-table-container">
+            <table class="registrations-table">
+                <thead>
                     <tr>
-                        <td>
-                            <a href="/admin/events/<%= reg.event._id %>" class="event-link">
-                                <%= reg.event.name %>
-                            </a>
-                        </td>
-                        <td><%= reg.registrationType.toUpperCase() %></td>
-                        <td>
-                            <% if (reg.registrationType === 'individual') { %>
-                                <div class="user-info">
-                                    <img src="<%= reg.userId.picture %>" alt="" class="user-avatar">
-                                    <div class="user-details">
-                                        <a href="/admin/users/<%= reg.userId._id %>" class="user-name">
-                                            <%= reg.userId.name %>
-                                        </a>
-                                        <span class="user-type-badge <%= reg.userId.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
-                                            <%= reg.userId.isIIESTian ? 'IIEST' : 'Non-IIEST' %>
-                                        </span>
-                                    </div>
-                                </div>
-                            <% } else { %>
-                                <div class="team-info">
-                                    <%= reg.teamId.name %> 
-                                    (<%= reg.teamId.teamMembers.length + 1 %> members)
-                                </div>
-                            <% } %>
-                        </td>
-                        <td>
-                            <%= new Date(reg.registeredAt).toLocaleDateString('en-IN') %>
-                            <span class="time">
-                                <%= new Date(reg.registeredAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
-                            </span>
-                        </td>
-                        <td>
-                            <% if (reg.paymentProof?.url) { %>
-                                <button onclick="showPaymentProof('<%= reg.paymentProof.url %>')" class="btn btn-small">
-                                    View Payment
-                                </button>
-                            <% } %>
-                        </td>
+                        <th>Event</th>
+                        <th>Type</th>
+                        <th>Participant</th>
+                        <th>Registered At</th>
+                        <th>Actions</th>
                     </tr>
-                <% }); %>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <% registrations.forEach(reg => { %>
+                        <tr>
+                            <td>
+                                <a href="/admin/event/<%= reg.event._id %>" class="event-link">
+                                    <%= reg.event.name %>
+                                </a>
+                            </td>
+                            <td><%= reg.registrationType.toUpperCase() %></td>
+                            <td>
+                                <% if (reg.registrationType === 'individual') { %>
+                                    <div class="user-info">
+                                        <img src="<%= reg.userId.picture %>" alt="" class="user-avatar">
+                                        <div class="user-details">
+                                            <a href="/admin/users/<%= reg.userId._id %>" class="user-name">
+                                                <%= reg.userId.name %>
+                                            </a>
+                                            <span class="user-type-badge <%= reg.userId.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                                <%= reg.userId.isIIESTian ? 'IIEST' : 'Non-IIEST' %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                <% } else { %>
+                                    <div class="team-info">
+                                        <%= reg.teamId.name %> 
+                                        (<%= reg.teamId.teamMembers.length + 1 %> members)
+                                    </div>
+                                <% } %>
+                            </td>
+                            <td>
+                                <%= new Date(reg.registeredAt).toLocaleDateString('en-IN') %>
+                                <span class="time">
+                                    <%= new Date(reg.registeredAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
+                                </span>
+                            </td>
+                            <td>
+                                <% if (reg.paymentProof?.url) { %>
+                                    <a href="<%= reg.paymentProof.url %>" target="_blank" class="btn btn-small">
+                                        View Payment
+                                    </a>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<!-- Add Modal for Payment Proof -->
-<div id="paymentModal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <img id="paymentProofImage" src="" alt="Payment Proof">
-    </div>
-</div>
+    <style>
+        .registrations-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 24px;
+        }
 
-<style>
-.registrations-table-container {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    margin-top: 24px;
-}
+        .registrations-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-.registrations-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+        .registrations-table th,
+        .registrations-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
 
-.registrations-table th,
-.registrations-table td {
-    padding: 16px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-}
+        .registrations-table th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-.registrations-table th {
-    background: #f8fafc;
-    color: #475569;
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
 
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-}
+        .event-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
 
-.event-link {
-    color: #2563eb;
-    text-decoration: none;
-}
+        .event-link:hover {
+            text-decoration: underline;
+        }
 
-.event-link:hover {
-    text-decoration: underline;
-}
+        .user-type-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
 
-.user-type-badge {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
+        .user-type-badge.iiestian {
+            background: #dcfce7;
+            color: #166534;
+        }
 
-.user-type-badge.iiestian {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.user-type-badge.non-iiestian {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    max-width: 90%;
-    max-height: 90vh;
-    position: relative;
-}
-
-.close-modal {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    cursor: pointer;
-}
-</style>
-
-<script>
-function showPaymentProof(url) {
-    const modal = document.getElementById('paymentModal');
-    const img = document.getElementById('paymentProofImage');
-    img.src = url;
-    modal.style.display = 'flex';
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('paymentModal');
-    if (event.target === modal) {
-        modal.style.display = "none";
-    }
-}
-
-// Close modal when clicking X button
-document.querySelector('.close-modal').onclick = function() {
-    document.getElementById('paymentModal').style.display = "none";
-}
-</script>
+        .user-type-badge.non-iiestian {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</body>
+</html>

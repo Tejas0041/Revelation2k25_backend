@@ -1,0 +1,45 @@
+<nav class="admin-sidebar">
+    <div class="sidebar-header">
+        <h1 class="sidebar-title">Revelation 2k25</h1>
+    </div>
+    
+    <ul class="sidebar-menu">
+        <li class="sidebar-item">
+            <a href="/admin/dashboard" class="sidebar-link <%= path === '/dashboard' ? 'active' : '' %>">
+                <i class="fas fa-home"></i>
+                Dashboard
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="/admin/events" class="sidebar-link <%= path === '/events' ? 'active' : '' %>">
+                <i class="fas fa-calendar"></i>
+                Events
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="/admin/teams" class="sidebar-link <%= path === '/teams' ? 'active' : '' %>">
+                <i class="fas fa-users"></i>
+                Teams
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="/admin/users" class="sidebar-link <%= path === '/users' ? 'active' : '' %>">
+                <i class="fas fa-user"></i>
+                Users
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="/admin/registrations" class="sidebar-link <%= path === '/registrations' ? 'active' : '' %>">
+                <i class="fas fa-clipboard-list"></i>
+                Registrations
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <a href="/admin/logout" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </div>
+</nav>
