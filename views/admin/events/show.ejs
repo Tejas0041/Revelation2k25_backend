@@ -8,87 +8,136 @@
 </head>
 <body>
     <div class="admin-container">
-        <div class="page-header">
-            <div class="nav-title">
-                <h2>Event Details</h2>
+        <div class="event-header">
+            <div class="event-title">
+                <h2><%= event.name %></h2>
+                <span class="event-type-badge"><%= event.type %></span>
             </div>
-            <div class="nav-actions">
-                <a href="/admin/event/edit/<%= event._id %>" class="btn">Edit Event</a>
+            <div class="event-actions">
+                <a href="/admin/events/<%= event._id %>/edit" class="btn">Edit Event</a>
+                <a href="/admin/events/<%= event._id %>/participants" class="btn">View Participants</a>
             </div>
         </div>
 
-        <div class="event-detail-wrapper">
-            <div class="event-hero">
-                <img src="<%= event.posterImage.url %>" alt="<%= event.name %>" class="event-poster">
-                <div class="event-hero-content">
-                    <h1><%= event.name %></h1>
-                    <div class="event-meta">
-                        <div class="meta-item">
-                            <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>
-                            <%= new Date(event.startTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+        <div class="event-grid">
+            <div class="event-details">
+                <div class="detail-card">
+                    <h3>Event Details</h3>
+                    <div class="detail-group">
+                        <label>Type</label>
+                        <p><%= event.type %></p>
+                    </div>
+                    <% if (event.type !== 'Single') { %>
+                        <div class="detail-group">
+                            <label>Team Size</label>
+                            <p><%= event.teamSize.min %> - <%= event.teamSize.max %> members</p>
                         </div>
-                        <div class="meta-item venue">
-                            <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                            <%= event.venue %>
-                        </div>
-                        <div class="meta-item fee">
-                            <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM12 20c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/></svg>
-                            ₹<%= event.registrationAmount %>
-                        </div>
+                    <% } %>
+                    <div class="detail-group">
+                        <label>Venue</label>
+                        <p><%= event.venue %></p>
+                    </div>
+                    <div class="detail-group">
+                        <label>Schedule</label>
+                        <p>
+                            <%= new Date(event.startTime).toLocaleString('en-IN', { 
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) %>
+                            -
+                            <%= new Date(event.endTime).toLocaleString('en-IN', { 
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) %>
+                        </p>
+                    </div>
+                    <div class="detail-group">
+                        <label>Registration Fee</label>
+                        <p>₹<%= event.registrationAmount %></p>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <h3>Description</h3>
+                    <p class="event-description"><%= event.description %></p>
+                </div>
+
+                <div class="detail-card">
+                    <h3>Rules</h3>
+                    <div class="event-rules">
+                        <%- event.rules.split('\n').map(rule => `<p>${rule}</p>`).join('') %>
                     </div>
                 </div>
             </div>
 
-            <div class="event-content">
-                <div class="event-key-details">
-                    <div class="detail-card">
-                        <div class="detail-card-header">Event Type</div>
-                        <div class="detail-card-content"><%= event.type %></div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-card-header">Registration Fee</div>
-                        <div class="detail-card-content">₹<%= event.registrationAmount %></div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-card-header">Date & Time</div>
-                        <div class="detail-card-content">
-                            <%= new Date(event.startTime).toLocaleString('en-IN', { 
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                            }) %>
-                        </div>
-                    </div>
-                    <div class="detail-card">
-                        <div class="detail-card-header">Team Size</div>
-                        <div class="detail-card-content">
-                            <%= event.teamSize.min === event.teamSize.max ? 
-                                `${event.teamSize.min} members` : 
-                                `${event.teamSize.min} - ${event.teamSize.max} members` %>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="content-section">
-                    <h3>Event Description</h3>
-                    <p><%= event.description %></p>
-                </div>
-
-                <div class="content-section">
-                    <h3>Rules & Guidelines</h3>
-                    <div class="rules-list">
-                        <% event.rules.split('\n').forEach(rule => { %>
-                            <% if(rule.trim()) { %>
-                                <div class="event-rule"><%= rule.trim() %></div>
-                            <% } %>
-                        <% }); %>
-                    </div>
+            <div class="event-sidebar">
+                <div class="poster-card">
+                    <img src="<%= event.posterImage.url %>" alt="<%= event.name %> poster">
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .event-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .event-type-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .event-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .detail-group {
+            margin-bottom: 16px;
+        }
+
+        .detail-group label {
+            display: block;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .poster-card img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .event-rules p {
+            margin-bottom: 8px;
+        }
+    </style>
 </body>
 </html>

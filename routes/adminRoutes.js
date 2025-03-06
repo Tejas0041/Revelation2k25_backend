@@ -17,7 +17,7 @@ router.get('/dashboard', adminAuth, adminController.dashboard);
 router.get('/events', adminAuth, adminController.getAllEventsPage);
 router.get('/events/new', adminAuth, adminController.createEventPage);
 router.post('/events/new', adminAuth, upload.single('poster'), adminController.createEvent);
-router.get('/events/:id', adminAuth, adminController.getEventByIdPage);
+router.get('/event/:id', adminAuth, adminController.getEventByIdPage);  // Change from /events/:id to /event/:id
 router.get('/events/:id/edit', adminAuth, adminController.getEditEventPage);
 router.put('/events/:id', adminAuth, upload.single('poster'), adminController.updateEvent);
 router.get('/events/:id/participants', adminAuth, adminController.getEventParticipantsPage);
@@ -28,7 +28,7 @@ router.get('/users/:id', adminAuth, adminController.getUserByIdPage);
 
 // Teams routes
 router.get('/teams', adminAuth, adminController.getAllTeamsPage);
-router.get('/teams/:id', adminAuth, adminController.getTeamById);
+router.get('/teams/:id/details', adminAuth, adminController.getTeamById); // Add this line
 
 // Registrations routes
 router.get('/registrations', adminAuth, adminController.getAllRegistrationsPage);
