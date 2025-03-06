@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Admin Panel</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="error-container">
+        <h1>Error</h1>
+        <p><%= message %></p>
+        <% if (process.env.NODE_ENV === 'development' && error) { %>
+            <pre class="error-stack"><%= error.stack %></pre>
+        <% } %>
+        <a href="/admin/dashboard" class="btn">Back to Dashboard</a>
+    </div>
+
+    <style>
+        .error-container {
+            max-width: 800px;
+            margin: 100px auto;
+            padding: 24px;
+            background: white;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .error-stack {
+            margin: 24px 0;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            text-align: left;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+    </style>
+</body>
+</html>

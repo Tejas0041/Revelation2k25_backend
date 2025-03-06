@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Team - <%= team.name %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <nav class="admin-nav">
+            <h2>Edit Team</h2>
+            <div class="nav-actions">
+                <a href="/admin/teams" class="btn btn-secondary">
+                    <span class="btn-icon">←</span> All Teams
+                </a>
+                <a href="/admin/dashboard" class="btn">Dashboard</a>
+            </div>
+        </nav>
+
+        <div class="edit-form-container">
+            <form action="/admin/teams/<%= team._id %>/edit" method="POST" class="team-form">
+                <div class="form-group">
+                    <label for="name">Team Name:</label>
+                    <input type="text" id="name" name="name" value="<%= team.name %>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventId">Event:</label>
+                    <select id="eventId" name="eventId" required>
+                        <% events.forEach(event => { %>
+                            <option value="<%= event._id %>" 
+                                <%= event._id.toString() === team.eventRegistered._id.toString() ? 'selected' : '' %>>
+                                <%= event.name %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="leaderPhone">Leader Phone:</label>
+                    <input type="tel" id="leaderPhone" name="leaderPhone" value="<%= team.leaderPhone %>" required>
+                </div>
+
+                <!-- You might want to add more fields here -->
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Update Team</button>
+                    <a href="/admin/teams" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

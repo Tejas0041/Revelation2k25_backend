@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= team.name %> - Team Details</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <h2>Team Details</h2>
+            <a href="/admin/teams" class="btn btn-secondary">Back to Teams</a>
+        </div>
+
+        <div class="team-full-details">
+            <!-- Team Info -->
+            <div class="team-info-section">
+                <div class="team-header">
+                    <div class="team-name-badge">
+                        <h2><%= team.name %></h2>
+                        <span class="team-type-badge <%= team.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                            <%= team.teamLeader.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team' %>
+                        </span>
+                    </div>
+                    <span class="team-size-badge"><%= team.teamMembers.length + 1 %> Members</span>
+                </div>
+                <!-- Rest of team info -->
+            </div>
+
+            <!-- Members Section -->
+            <div class="team-members-section">
+                <h3>Team Members</h3>
+                <!-- Rest of members section -->
+            </div>
+
+            <!-- Payment Section if applicable -->
+            <% if (team.paymentProof) { %>
+                <div class="payment-section">
+                    <!-- Payment details -->
+                </div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

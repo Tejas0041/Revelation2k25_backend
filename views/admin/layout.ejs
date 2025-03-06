@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? `${title} - ` : '' %>Admin Panel | Revelation 2k25</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Admin Navbar -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>Revelation2k25 | Admin Panel</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/admin/dashboard" class="nav-link <%= path === '/dashboard' ? 'active' : '' %>">Dashboard</a>
+                <a href="/admin/events" class="nav-link <%= path === '/events' ? 'active' : '' %>">Events</a>
+                <a href="/admin/users" class="nav-link <%= path === '/users' ? 'active' : '' %>">Users</a>
+                <a href="/admin/teams" class="nav-link <%= path === '/teams' ? 'active' : '' %>">Teams</a>
+                <a href="/admin/registrations" class="nav-link <%= path === '/registrations' ? 'active' : '' %>">Registrations</a>
+                <a href="/admin/logout" class="logout-btn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <%- body %>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div class="error-alert"><%= error %></div>
+    <% } %>
+</body>
+</html>

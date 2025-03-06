@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= user.name %> - User Details</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <div class="nav-title">
+                <h2>User Details</h2>
+                <span class="user-type-badge <%= user.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                    <%= user.isIIESTian ? 'IIEST Student' : 'Non IIEST' %>
+                </span>
+            </div>
+            <a href="/admin/users" class="btn btn-secondary">
+                <span class="btn-icon">←</span> Back to Users
+            </a>
+        </div>
+
+        <div class="user-detail-card">
+            <div class="user-header">
+                <img src="<%= user.picture %>" alt="<%= user.name %>" class="user-detail-avatar">
+                <div class="user-header-info">
+                    <h1><%= user.name %></h1>
+                    <div class="user-meta">
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" class="icon"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                            <%= user.email %>
+                        </span>
+                        <% if(user.phoneNumber) { %>
+                            <span class="meta-item">
+                                <svg viewBox="0 0 24 24" class="icon"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                                <%= user.phoneNumber %>
+                            </span>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <div class="registered-events">
+                <h2>Registered Events</h2>
+                <% if (registrations && registrations.length > 0) { %>
+                    <div class="events-list">
+                        <% registrations.forEach((registration, index) => { %>
+                            <div class="event-item">
+                                <div class="event-item-header">
+                                    <div class="event-title">
+                                        <span class="event-number">#<%= index + 1 %></span>
+                                        <h3><%= registration.event.name %></h3>
+                                    </div>
+                                    <span class="event-type <%= registration.registrationType %>">
+                                        <%= registration.registrationType === 'team' ? 'Team' : 'Individual' %>
+                                    </span>
+                                </div>
+                                
+                                <div class="event-details-grid">
+                                    <% if (registration.registrationType === 'team' && registration.teamId) { %>
+                                        <div class="team-details">
+                                            <div class="team-header">
+                                                <div class="team-title-wrapper">
+                                                    <h4 onclick="viewTeamDetails('<%= registration.teamId._id %>')" style="cursor: pointer;">
+                                                        <%= registration.teamId.name %>
+                                                    </h4>
+                                                    <span class="team-type-badge <%= registration.teamId.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                                        <%= registration.teamId.teamLeader.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team' %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="no-events">
+                        <p>No events registered yet</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Proof Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <img id="paymentProofImage" src="" alt="Payment Proof">
+        </div>
+    </div>
+
+    <!-- Add Team Modal -->
+    <div id="teamModal" class="modal">
+        <div class="modal-content team-modal">
+            <span class="close-modal">&times;</span>
+            <div id="teamDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        const modal = document.getElementById('paymentModal');
+        const modalImg = document.getElementById('paymentProofImage');
+        const closeModal = document.querySelector('.close-modal');
+
+        function showPaymentProof(imageUrl) {
+            modal.style.display = "flex";
+            modalImg.src = imageUrl;
+        }
+
+        closeModal.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        async function viewTeamDetails(teamId) {
+            try {
+                const response = await fetch(`/admin/teams/${teamId}`);
+                if (!response.ok) throw new Error('Failed to fetch team details');
+                const team = await response.json();
+                
+                const modal = document.getElementById('teamModal');
+                const detailsDiv = document.getElementById('teamDetails');
+                
+                detailsDiv.innerHTML = `
+                    <div class="team-full-details">
+                        <div class="team-info-section">
+                            <div class="team-header">
+                                <div class="team-name-badge">
+                                    <h2>${team.name}</h2>
+                                    <span class="team-type-badge ${team.teamLeader?.isIIESTian ? 'iiestian' : 'non-iiestian'}">
+                                        ${team.teamLeader?.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team'}
+                                    </span>
+                                </div>
+                                <span class="team-size-badge">${team.teamMembers.length + 1} Members</span>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label-value">
+                                        <label>Event:</label>
+                                        <span>${team.event ? `<a href="/admin/event/${team.event._id}" class="event-link">${team.event.name}</a>` : 'N/A'}</span>
+                                    </div>
+                                </div>
+                                ${team.registeredAt ? `
+                                    <div class="info-item">
+                                        <div class="info-label-value">
+                                            <label>Registration Time:</label>
+                                            <span>${new Date(team.registeredAt).toLocaleDateString('en-IN', { 
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                hour12: true
+                                            })}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="team-members-section">
+                            <h3>Team Members</h3>
+                            <div class="detailed-members-list">
+                                <div class="detailed-member leader">
+                                    <span class="role-badge leader">Team Leader</span>
+                                    <div class="member-main">
+                                        <div class="member-avatar-name">
+                                            <img src="${team.teamLeader.picture}" alt="${team.teamLeader.name}">
+                                            <a href="/admin/users/${team.teamLeader._id}" class="member-name">${team.teamLeader.name}</a>
+                                        </div>
+                                        <div class="member-contact">
+                                            <span>
+                                                <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                                                ${team.teamLeader.email}
+                                            </span>
+                                            ${team.leaderPhone ? `
+                                                <span>
+                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                                                    ${team.leaderPhone}
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                ${team.teamMembers.map(member => `
+                                    <div class="detailed-member">
+                                        <span class="role-badge">Team Member</span>
+                                        <div class="member-main">
+                                            <div class="member-avatar-name">
+                                                <img src="${member.picture}" alt="${member.name}">
+                                                <a href="/admin/users/${member._id}" class="member-name">${member.name}</a>
+                                            </div>
+                                            <div class="member-contact">
+                                                <span>
+                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                                                    ${member.email}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        ${team.paymentProof ? `
+                            <div class="payment-section">
+                                <h3>Payment Details</h3>
+                                <button onclick="showPaymentProof('${team.paymentProof.url}')" class="btn btn-small">
+                                    View Payment Proof
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                modal.style.display = 'flex';
+            } catch (error) {
+                console.error('Error fetching team details:', error);
+            }
+        }
+
+        function renderTeamDetails(team) {
+            return `
+                    <div class="team-full-details">
+                        <div class="team-info-section">
+                            <div class="team-header">
+                                <div class="team-name-badge">
+                                    <h2>${team.name}</h2>
+                                    <span class="team-type-badge ${team.teamLeader?.isIIESTian ? 'iiestian' : 'non-iiestian'}">
+                                        ${team.teamLeader?.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team'}
+                                    </span>
+                                </div>
+                                <span class="team-size-badge">${team.teamMembers.length + 1} Members</span>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label-value">
+                                        <label>Event:</label>
+                                        <span>${team.event ? `<a href="/admin/event/${team.event._id}" class="event-link">${team.event.name}</a>` : 'N/A'}</span>
+                                    </div>
+                                </div>
+                                ${team.registeredAt ? `
+                                    <div class="info-item">
+                                        <div class="info-label-value">
+                                            <label>Registration Time:</label>
+                                            <span>${formatDate(team.registeredAt)}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="team-members-section">
+                            <h3>Team Members</h3>
+                            <div class="detailed-members-list">
+                                <div class="detailed-member leader">
+                                    <span class="role-badge leader">Team Leader</span>
+                                    <div class="member-main">
+                                        <div class="member-avatar-name">
+                                            <img src="${team.teamLeader.picture}" alt="${team.teamLeader.name}">
+                                            <a href="/admin/users/${team.teamLeader._id}" class="member-name">${team.teamLeader.name}</a>
+                                        </div>
+                                        <div class="member-contact">
+                                            <span>
+                                                <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                                                ${team.teamLeader.email}
+                                            </span>
+                                            ${team.leaderPhone ? `
+                                                <span>
+                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                                                    ${team.leaderPhone}
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                ${team.teamMembers.map(member => `
+                                    <div class="detailed-member">
+                                        <span class="role-badge">Team Member</span>
+                                        <div class="member-main">
+                                            <div class="member-avatar-name">
+                                                <img src="${member.picture}" alt="${member.name}">
+                                                <a href="/admin/users/${member._id}" class="member-name">${member.name}</a>
+                                            </div>
+                                            <div class="member-contact">
+                                                <span>
+                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                                                    ${member.email}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        ${team.paymentProof ? `
+                            <div class="payment-section">
+                                <h3>Payment Details</h3>
+                                <button onclick="showPaymentProof('${team.paymentProof.url}')" class="btn btn-small">
+                                    View Payment Proof
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+        }
+
+        // Modal close functionality
+        const modals = document.querySelectorAll('.modal');
+        const closeBtns = document.querySelectorAll('.close-modal');
+
+        closeBtns.forEach(btn => {
+            btn.onclick = function() {
+                btn.closest('.modal').style.display = "none";
+            }
+        });
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+    </script>
+
+    <style>
+        .team-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .event-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .event-link:hover {
+            text-decoration: underline;
+        }
+
+        .member-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+    </style>
+</body>
+</html>

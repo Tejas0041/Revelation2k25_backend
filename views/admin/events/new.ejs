@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Event - Revelation 2k25</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <% if (locals.error) { %>
+            <div class="error-alert"><%= error %></div>
+        <% } %>
+
+        <form action="/admin/event/new" method="POST" enctype="multipart/form-data" class="event-form">
+            <div class="form-group">
+                <label for="name">Event Name:</label>
+                <input type="text" id="name" name="name" required 
+                    value="<%= formData ? formData.name : '' %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="type">Event Type:</label>
+                <select id="type" name="type" required>
+                    <option value="Single" <%= formData && formData.type === 'Single' ? 'selected' : '' %>>Single</option>
+                    <option value="Combined" <%= formData && formData.type === 'Combined' ? 'selected' : '' %>>Combined</option>
+                    <option value="Team" <%= formData && formData.type === 'Team' ? 'selected' : '' %>>Team</option>
+                </select>
+            </div>
+
+            <div class="form-group size-limits" id="sizeLimitsDiv">
+                <label>Size Limits:</label>
+                edit <div class="team-size-inputs">
+                    <div>
+                        <label for="minTeamSize">Minimum:</label>
+                        <input type="number" id="minTeamSize" name="teamSize[min]" required min="1"
+                            value="<%= formData && formData.teamSize ? formData.teamSize.min : '1' %>">
+                    </div>
+                    <div>
+                        <label for="maxTeamSize">Maximum:</label>
+                        <input type="number" id="maxTeamSize" name="teamSize[max]" required min="1"
+                            value="<%= formData && formData.teamSize ? formData.teamSize.max : '1' %>">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required rows="4"><%= formData ? formData.description : '' %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="rules">Rules:</label>
+                <textarea id="rules" name="rules" rows="4"><%= formData ? formData.rules : '' %></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="startTime">Start Time:</label>
+                <input type="datetime-local" id="startTime" name="startTime" required
+                    value="<%= formData ? formData.startTime : '' %>">
+            </div>
+
+            <div class="form-group">
+                <label for="endTime">End Time:</label>
+                <input type="datetime-local" id="endTime" name="endTime" required
+                    value="<%= formData ? formData.endTime : '' %>">
+            </div>
+
+            <div class="form-group">
+                <label for="venue">Venue:</label>
+                <input type="text" id="venue" name="venue" required
+                    value="<%= formData ? formData.venue : '' %>">
+            </div>
+
+            <div class="form-group">
+                <label for="registrationAmount">Registration Amount (₹):</label>
+                <input type="number" id="registrationAmount" name="registrationAmount" required min="0"
+                    value="<%= formData ? formData.registrationAmount : '' %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="poster">Event Poster</label>
+                <div class="file-input-container">
+                    <label class="file-input-label">
+                        <svg viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
+                        </svg>
+                        Choose Image
+                        <input type="file" id="poster" name="poster" accept="image/*" required onchange="updateFileName(this)">
+                    </label>
+                    <div class="file-name" id="fileName"></div>
+                </div>
+                <div class="form-help">Recommended size: 1200x600 pixels</div>
+            </div>
+            
+            <button type="submit">Create Event</button>
+        </form>
+    </div>
+
+    <script>
+        // Show/hide size limits based on event type
+        const sizeLimitsDiv = document.querySelector('.size-limits');
+        const typeSelect = document.getElementById('type');
+        
+        function updateSizeLimitsVisibility() {
+            if (typeSelect.value === 'Team' || typeSelect.value === 'Combined') {
+                sizeLimitsDiv.style.display = 'block';
+            } else {
+                sizeLimitsDiv.style.display = 'none';
+                document.getElementById('minTeamSize').value = '1';
+                document.getElementById('maxTeamSize').value = '1';
+            }
+        }
+
+        // Initialize visibility
+        updateSizeLimitsVisibility();
+        
+        // Add change listener
+        typeSelect.addEventListener('change', updateSizeLimitsVisibility);
+
+        function updateFileName(input) {
+            const fileName = input.files[0]?.name;
+            document.getElementById('fileName').textContent = fileName || '';
+        }
+    </script>
+</body>
+</html>

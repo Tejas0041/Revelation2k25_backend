@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Users - Revelation 2k25</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filters select {
+            min-width: 150px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+
+        <div class="page-header">
+            <h2>All Users</h2>
+            <div class="filters">
+                <select id="filterType" onchange="updateFilterOptions()">
+                    <option value="">Select Filter</option>
+                    <option value="college">College Type</option>
+                    <option value="registration">Registration Status</option>
+                </select>
+                <select id="filterValue" onchange="applyFilter()">
+                    <option value="">Select Value</option>
+                </select>
+                <button onclick="clearFilters()" class="btn btn-small btn-secondary">Clear</button>
+            </div>
+        </div>
+
+        <div class="users-table-container">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th width="35%">Name</th>
+                        <th width="35%">Email</th>
+                        <th width="15%">Events</th>
+                        <th width="15%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(user => { %>
+                        <tr>
+                            <td>
+                                <div class="user-info">
+                                    <img src="<%= user.picture %>" alt="<%= user.name %>" class="user-avatar">
+                                    <div class="user-name-type">
+                                        <span class="user-name"><%= user.name %></span>
+                                        <span class="user-type-indicator <%= user.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                            <%= user.isIIESTian ? 'IIEST Student' : 'Non IIEST' %>
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><%= user.email %></td>
+                            <td>
+                                <span class="event-count">
+                                    <%= user.registrations ? user.registrations.length : 0 %> Events
+                                </span>
+                            </td>
+                            <td>
+                                <a href="/admin/users/<%= user._id %>" class="btn btn-small">View Details</a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function updateFilterOptions() {
+            const filterType = document.getElementById('filterType').value;
+            const filterValue = document.getElementById('filterValue');
+            filterValue.innerHTML = '<option value="">Select Value</option>';
+            
+            switch(filterType) {
+                case 'college':
+                    filterValue.innerHTML += `
+                        <option value="iiestian">IIEST</option>
+                        <option value="non-iiestian">Non-IIEST</option>
+                    `;
+                    break;
+                case 'registration':
+                    filterValue.innerHTML += `
+                        <option value="registered">Has Registrations</option>
+                        <option value="not-registered">No Registrations</option>
+                    `;
+                    break;
+            }
+        }
+
+        function applyFilter() {
+            const filterType = document.getElementById('filterType').value;
+            const filterValue = document.getElementById('filterValue').value;
+            const rows = document.querySelectorAll('.users-table tbody tr');
+            
+            rows.forEach(row => {
+                let show = true;
+                
+                if (filterType && filterValue) {
+                    switch(filterType) {
+                        case 'college':
+                            const isIIESTian = row.querySelector('.user-type-indicator').classList.contains('iiestian');
+                            show = (filterValue === 'iiestian') === isIIESTian;
+                            break;
+                        case 'registration':
+                            const hasRegistrations = row.querySelector('.event-count').textContent !== '0 Events';
+                            show = (filterValue === 'registered') === hasRegistrations;
+                            break;
+                    }
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterValue').innerHTML = '<option value="">Select Value</option>';
+            document.querySelectorAll('.users-table tbody tr').forEach(row => row.style.display = '');
+        }
+    </script>
+</body>
+</html>

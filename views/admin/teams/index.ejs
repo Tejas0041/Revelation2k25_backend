@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Teams - Revelation 2k25</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <h2>All Teams</h2>
+            <div class="filters">
+                <select id="eventFilter">
+                    <option value="">All Events</option>
+                    <% events.forEach(event => { %>
+                        <option value="<%= event._id %>"><%= event.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+        </div>
+
+        <div class="teams-grid">
+            <% teams.forEach(team => { %>
+                <div class="team-card" data-event="<%= team.eventRegistered?._id || '' %>">
+                    <div class="team-card-header">
+                        <div>
+                            <h3><%= team.name %></h3>
+                            <span class="team-id">ID: <%= team._id %></span>
+                        </div>
+                        <span class="team-size-badge"><%= team.teamMembers.length + 1 %> Members</span>
+                    </div>
+
+                    <div class="team-card-event">
+                        <label>Event</label>
+                        <p><%= team.eventRegistered?.name || 'Not Registered' %></p>
+                    </div>
+
+                    <div class="team-card-preview">
+                        <div class="team-leader">
+                            <img src="<%= team.teamLeader.picture %>" alt="Team Leader">
+                            <div>
+                                <span class="member-name"><%= team.teamLeader.name %></span>
+                                <span class="member-role">Team Leader</span>
+                            </div>
+                        </div>
+                        <div class="member-count">+<%= team.teamMembers.length %> members</div>
+                    </div>
+
+                    <div class="team-card-actions">
+                        <button class="btn btn-small view-details" data-team-id="<%= team._id %>">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <!-- Team Details Modal -->
+    <div id="teamDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="teamDetailsContent"></div>
+        </div>
+    </div>
+
+    <!-- Payment Proof Modal -->
+    <div id="paymentProofModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="paymentProofImage" alt="Payment Proof">
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Team details functionality
+        document.querySelectorAll('.view-details').forEach(button => {
+            button.addEventListener('click', async function() {
+                const teamId = this.getAttribute('data-team-id');
+                try {
+                    const response = await fetch(`/admin/teams/${teamId}`);
+                    if (!response.ok) throw new Error('Failed to fetch team details');
+                    
+                    const team = await response.json();
+                    const modal = document.getElementById('teamDetailsModal');
+                    const content = document.getElementById('teamDetailsContent');
+                    
+                    content.innerHTML = `
+                        <h2>${team.name}</h2>
+                        <div class="team-details">
+                            <div class="team-meta">
+                                <p><strong>Event:</strong> ${team.eventRegistered ? team.eventRegistered.name : 'Not registered'}</p>
+                                ${team.registeredAt ? `<p><strong>Registered:</strong> ${new Date(team.registeredAt).toLocaleString()}</p>` : ''}
+                            </div>
+                            
+                            <div class="members-section">
+                                <h3>Team Members</h3>
+                                <div class="leader">
+                                    <div class="member-info">
+                                        <img src="${team.teamLeader.picture}" alt="${team.teamLeader.name}" class="member-avatar">
+                                        <div>
+                                            <h4>${team.teamLeader.name} <span class="badge leader">Team Leader</span></h4>
+                                            <p>${team.teamLeader.email}</p>
+                                            <span class="college-badge ${team.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian'}">
+                                                ${team.teamLeader.isIIESTian ? 'IIEST' : 'Non-IIEST'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="members">
+                                    ${team.teamMembers.map(member => `
+                                        <div class="member-info">
+                                            <img src="${member.picture}" alt="${member.name}" class="member-avatar">
+                                            <div>
+                                                <h4>${member.name}</h4>
+                                                <p>${member.email}</p>
+                                                <span class="college-badge ${member.isIIESTian ? 'iiestian' : 'non-iiestian'}">
+                                                    ${member.isIIESTian ? 'IIEST' : 'Non-IIEST'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            ${team.paymentProof ? `
+                                <div class="payment-section">
+                                    <h3>Payment Proof</h3>
+                                    <button onclick="showPaymentProof('${team.paymentProof.url}')" class="btn btn-small">
+                                        View Payment Proof
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    modal.style.display = "block";
+                } catch (error) {
+                    console.error('Error fetching team details:', error);
+                    alert('Error fetching team details');
+                }
+            });
+        });
+
+        // Event filter functionality
+        const eventFilter = document.getElementById('eventFilter');
+        eventFilter.addEventListener('change', function() {
+            const selectedEventId = this.value;
+            const teams = document.getElementsByClassName('team-card');
+            
+            Array.from(teams).forEach(team => {
+                if (!selectedEventId || team.dataset.event === selectedEventId) {
+                    team.style.display = 'block';
+                } else {
+                    team.style.display = 'none';
+                }
+            });
+        });
+
+        // Payment proof functionality
+        window.showPaymentProof = function(url) {
+            const modal = document.getElementById('paymentProofModal');
+            const img = document.getElementById('paymentProofImage');
+            img.src = url;
+            modal.style.display = "block";
+        }
+
+        // Modal close functionality
+        document.querySelectorAll('.modal .close').forEach(closeBtn => {
+            closeBtn.onclick = function() {
+                this.closest('.modal').style.display = "none";
+            }
+        });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+    });
+    </script>
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 12px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .team-details {
+            margin-top: 24px;
+        }
+
+        .team-meta {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .members-section {
+            margin-top: 24px;
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .member-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .badge.leader {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .college-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .college-badge.iiestian {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .college-badge.non-iiestian {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .payment-section {
+            margin-top: 24px;
+            padding: 16px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+        }
+
+        #paymentProofModal .modal-content {
+            max-width: 90%;
+            max-height: 90vh;
+            text-align: center;
+        }
+
+        #paymentProofModal img {
+            max-width: 100%;
+            max-height: calc(90vh - 100px);
+            object-fit: contain;
+        }
+    </style>
+</body>
+</html>

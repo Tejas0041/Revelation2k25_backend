@@ -1,0 +1,18 @@
+## Revelation Backend
+(Things to be implemented)
+
+* Google Login
+
+* Register for event 
+    - Team / Individual
+    - Create team / join
+    - If leader (who created team) is not iiestian, then ask for payment
+    - Once join team is clicked, it will be pending for verification from leader
+
+* Admin portal
+    - See all users
+    - Add event (with poster image)
+    - Edit event
+    - Delete event
+    - Check event registrations
+    - Grade a team or qualify/disqualify a team

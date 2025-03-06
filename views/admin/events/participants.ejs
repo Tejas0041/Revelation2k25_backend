@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= event.name %> - Participants</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <div class="header-title">
+                <h2><%= event.name %> - Participants</h2>
+                <span class="total-count">Total: <%= registrations.length %></span>
+            </div>
+            <div class="filters">
+                <select id="typeFilter" onchange="filterParticipants()">
+                    <option value="">All Types</option>
+                    <option value="individual">Individual</option>
+                    <option value="team">Team</option>
+                </select>
+                <select id="collegeFilter" onchange="filterParticipants()">
+                    <option value="">All Colleges</option>
+                    <option value="iiestian">IIEST</option>
+                    <option value="non-iiestian">Non-IIEST</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="participants-list">
+            <% registrations.forEach(reg => { %>
+                <div class="participant-card" 
+                     data-type="<%= reg.registrationType %>"
+                     data-college="<%= reg.registrationType === 'individual' ? 
+                         (reg.userId.isIIESTian ? 'iiestian' : 'non-iiestian') : 
+                         (reg.teamId.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian') %>">
+                    
+                    <% if (reg.registrationType === 'individual') { %>
+                        <div class="participant-info">
+                            <a href="/admin/users/<%= reg.userId._id %>" class="participant-name">
+                                <%= reg.userId.name %>
+                            </a>
+                            <span class="type-badge <%= reg.userId.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                <%= reg.userId.isIIESTian ? 'IIEST' : 'Non-IIEST' %>
+                            </span>
+                        </div>
+                    <% } else { %>
+                        <div class="participant-info">
+                            <a href="#" onclick="viewTeamDetails('<%= reg.teamId._id %>')" class="participant-name">
+                                <%= reg.teamId.name %>
+                            </a>
+                            <span class="type-badge <%= reg.teamId.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                <%= reg.teamId.teamLeader.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team' %>
+                            </span>
+                        </div>
+                    <% } %>
+                    
+                    <div class="registration-time">
+                        Registered: <%= new Date(reg.registeredAt).toLocaleString() %>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <%- include('../partials/modals') %>
+
+    <script>
+        function filterParticipants() {
+            const typeFilter = document.getElementById('typeFilter').value;
+            const collegeFilter = document.getElementById('collegeFilter').value;
+            const cards = document.querySelectorAll('.participant-card');
+            
+            cards.forEach(card => {
+                const matchesType = !typeFilter || card.dataset.type === typeFilter;
+                const matchesCollege = !collegeFilter || card.dataset.college === collegeFilter;
+                
+                card.style.display = (matchesType && matchesCollege) ? 'block' : 'none';
+            });
+        }
+    </script>
+
+    <style>
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .total-count {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+        }
+
+        .participant-card {
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .participant-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .participant-name {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .participant-name:hover {
+            color: #2563eb;
+        }
+
+        .registration-time {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+    </style>
+</body>
+</html>

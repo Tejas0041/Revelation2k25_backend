@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Event - <%= event.name %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <% if (error) { %>
+            <div class="error-alert"><%= error %></div>
+        <% } %>
+
+        <form action="/admin/event/edit/<%= event._id %>" method="POST" enctype="multipart/form-data" class="event-form">
+            <div class="form-group">
+                <label for="name">Event Name:</label>
+                <input type="text" id="name" name="name" required value="<%= event.name %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="type">Event Type:</label>
+                <select id="type" name="type" required>
+                    <option value="Single" <%= event.type === 'Single' ? 'selected' : '' %>>Single</option>
+                    <option value="Combined" <%= event.type === 'Combined' ? 'selected' : '' %>>Combined</option>
+                    <option value="Team" <%= event.type === 'Team' ? 'selected' : '' %>>Team</option>
+                </select>
+            </div>
+
+            <div class="form-group team-size" id="teamSizeDiv">
+                <label>Team Size:</label>
+                <div class="team-size-inputs">
+                    <div>
+                        <label for="minTeamSize">Minimum:</label>
+                        <input type="number" id="minTeamSize" name="teamSize[min]" required min="1"
+                            value="<%= event.teamSize.min %>">
+                    </div>
+                    <div>
+                        <label for="maxTeamSize">Maximum:</label>
+                        <input type="number" id="maxTeamSize" name="teamSize[max]" required min="1"
+                            value="<%= event.teamSize.max %>">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required rows="4"><%= event.description %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="rules">Rules:</label>
+                <textarea id="rules" name="rules" rows="4"><%= event.rules %></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="startTime">Start Time:</label>
+                <input type="datetime-local" id="startTime" name="startTime" required
+                    value="<%= new Date(event.startTime).toISOString().slice(0, 16) %>">
+            </div>
+
+            <div class="form-group">
+                <label for="endTime">End Time:</label>
+                <input type="datetime-local" id="endTime" name="endTime" required
+                    value="<%= new Date(event.endTime).toISOString().slice(0, 16) %>">
+            </div>
+
+            <div class="form-group">
+                <label for="venue">Venue:</label>
+                <input type="text" id="venue" name="venue" required value="<%= event.venue %>">
+            </div>
+
+            <div class="form-group">
+                <label for="registrationAmount">Registration Amount (₹):</label>
+                <input type="number" id="registrationAmount" name="registrationAmount" required min="0"
+                    value="<%= event.registrationAmount %>">
+            </div>
+            
+            <div class="form-group">
+                <label>Current Poster:</label>
+                <img src="<%= event.posterImage.url %>" alt="Current poster" style="max-width: 200px; display: block; margin: 10px 0;">
+                <label for="poster">Update Poster (optional):</label>
+                <input type="file" id="poster" name="poster" accept="image/*">
+            </div>
+            
+            <button type="submit">Update Event</button>
+        </form>
+    </div>
+
+    <script>
+        // Show/hide team size based on event type
+        const teamSizeDiv = document.querySelector('.team-size');
+        const typeSelect = document.getElementById('type');
+        
+        function updateTeamSizeVisibility() {
+            if (typeSelect.value === 'Team') {
+                teamSizeDiv.style.display = 'block';
+            } else {
+                teamSizeDiv.style.display = 'none';
+                document.getElementById('minTeamSize').value = '1';
+                document.getElementById('maxTeamSize').value = '1';
+            }
+        }
+
+        // Initialize visibility
+        updateTeamSizeVisibility();
+        
+        // Add change listener
+        typeSelect.addEventListener('change', updateTeamSizeVisibility);
+    </script>
+</body>
+</html>

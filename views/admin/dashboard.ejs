@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Revelation 2k25</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <nav class="admin-nav">
+            <h2>Admin Dashboard</h2>
+            <a href="/admin/logout" class="logout-btn">Logout</a>
+        </nav>
+        
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>Users</h3>
+                <a href="/admin/users" class="btn">View All Users</a>
+            </div>
+            
+            <div class="dashboard-card">
+                <h3>Events</h3>
+                <a href="/admin/events" class="btn">View All Events</a>
+                <a href="/admin/event/new" class="btn">Add New Event</a>
+            </div>
+        </div>
+
+        <div class="dashboard-container">
+            <div class="stats-grid">
+                <!-- Events Stats -->
+                <div class="stats-card">
+                    <h3>Events</h3>
+                    <div class="stats-number"><%= stats.totalEvents %></div>
+                    <div class="stats-breakdown">
+                        <div class="breakdown-item">
+                            <span class="label">Active</span>
+                            <span class="value"><%= stats.activeEvents %></span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="label">Upcoming</span>
+                            <span class="value"><%= stats.upcomingEvents %></span>
+                        </div>
+                    </div>
+                    <a href="/admin/events" class="stats-link">View All Events</a>
+                </div>
+
+                <!-- Users Stats -->
+                <div class="stats-card">
+                    <h3>Users</h3>
+                    <div class="stats-number"><%= stats.usersCount.total %></div>
+                    <div class="stats-breakdown">
+                        <div class="breakdown-item iiestian">
+                            <span class="label">IIEST</span>
+                            <span class="value"><%= stats.usersCount.iiestian %></span>
+                        </div>
+                        <div class="breakdown-item non-iiestian">
+                            <span class="label">Non-IIEST</span>
+                            <span class="value"><%= stats.usersCount.nonIiestian %></span>
+                        </div>
+                    </div>
+                    <a href="/admin/users" class="stats-link">View All Users</a>
+                </div>
+
+                <!-- Registrations Stats -->
+                <div class="stats-card">
+                    <h3>Registrations</h3>
+                    <div class="stats-number"><%= stats.registrationsCount.total %></div>
+                    <div class="stats-breakdown">
+                        <div class="breakdown-item">
+                            <span class="label">Individual</span>
+                            <span class="value"><%= stats.registrationsCount.individual %></span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="label">Team</span>
+                            <span class="value"><%= stats.registrationsCount.team %></span>
+                        </div>
+                    </div>
+                    <a href="/admin/registrations" class="stats-link">View All Registrations</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .admin-container {
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .dashboard-card h3 {
+        margin: 0 0 16px 0;
+        color: #1e293b;
+        font-size: 1.25rem;
+    }
+
+    .dashboard-card .btn {
+        margin-top: 12px;
+        width: 100%;
+    }
+
+    .dashboard-card .btn + .btn {
+        margin-top: 8px;
+    }
+
+    .dashboard-container {
+        padding: 24px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        padding: 24px;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 16px 0;
+    }
+
+    .stats-breakdown {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .breakdown-item {
+        flex: 1;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .breakdown-item.iiestian {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .breakdown-item.non-iiestian {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .stats-link {
+        color: #2563eb;
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .stats-link:hover {
+        text-decoration: underline;
+    }
+    </style>
+</body>
+</html>
