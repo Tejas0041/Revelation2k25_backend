@@ -1,3 +1,35 @@
+/* Global Styles */
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --success: #059669;
+    --danger: #dc2626;
+    --warning: #d97706;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-800);
+    line-height: 1.5;
+}
+
 /* Admin Panel Styles */
 .login-container {
     max-width: 400px;
@@ -8,7 +40,7 @@
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
 }
 
 .form-group label {
@@ -34,9 +66,9 @@ button {
 }
 
 .admin-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 24px;
 }
 
 .admin-nav {
@@ -63,7 +95,7 @@ button {
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: #3b82f6;
+    background: var(--primary);
     color: white;
     border-radius: 8px;
     font-weight: 500;
@@ -74,22 +106,21 @@ button {
 }
 
 .btn:hover {
-    background: #2563eb;
+    background: var(--primary-dark);
     transform: translateY(-1px);
 }
 
 .btn-secondary {
-    background: #fff;
-    color: #1a1f36;
-    border: 1px solid #e5e7eb;
+    background: var(--gray-200);
+    color: var(--gray-700);
 }
 
 .btn-secondary:hover {
-    background: #f9fafb;
+    background: var(--gray-300);
 }
 
 .btn-small {
-    padding: 6px 12px;
+    padding: 0.25rem 0.75rem;
     font-size: 0.875rem;
 }
 
@@ -144,8 +175,8 @@ button {
 .event-form textarea:focus,
 .event-form select:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .event-form textarea {
@@ -1270,7 +1301,7 @@ event-info span {
 }
 
 .nav-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
