@@ -42,6 +42,33 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 
+// Handle 404 - Keep this as the last route
+app.use((req, res) => {
+    if (req.accepts('html')) {
+        res.status(404).render('error', { layout: false });
+        return;
+    }
+    
+    // API requests
+    if (req.accepts('json')) {
+        res.status(404).json({ success: false, message: 'Not Found' });
+        return;
+    }
+    
+    res.status(404).type('txt').send('Not Found');
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).render('error', { 
+        layout: false,
+        status: 500,
+        message: 'Something broke!',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -13,24 +13,20 @@ router.get('/logout', adminController.logout);
 // Dashboard
 router.get('/dashboard', adminAuth, adminController.dashboard);
 
-// Events routes
+// Events routes - Order matters!
 router.get('/events', adminAuth, adminController.getAllEventsPage);
-router.get('/events/new', adminAuth, adminController.createEventPage);
-router.post('/events/new', adminAuth, upload.single('poster'), adminController.createEvent);
-router.get('/event/:id', adminAuth, adminController.getEventByIdPage);  // Change from /events/:id to /event/:id
-router.get('/events/:id/edit', adminAuth, adminController.getEditEventPage);
-router.put('/events/:id', adminAuth, upload.single('poster'), adminController.updateEvent);
-router.get('/events/:id/participants', adminAuth, adminController.getEventParticipantsPage);
+router.get('/event/new', adminAuth, adminController.createEventPage);
+router.post('/event/new', adminAuth, upload.single('poster'), adminController.createEvent);
+router.get('/event/:id', adminAuth, adminController.getEventByIdPage);
+router.get('/event/edit/:id', adminAuth, adminController.getEditEventPage);
+router.post('/event/edit/:id', adminAuth, upload.single('poster'), adminController.updateEvent);
+router.get('/event/participants/:id', adminAuth, adminController.getEventParticipantsPage);
 
-// Users routes
+// Rest of routes
 router.get('/users', adminAuth, adminController.getAllUsersPage);
 router.get('/users/:id', adminAuth, adminController.getUserByIdPage);
-
-// Teams routes
 router.get('/teams', adminAuth, adminController.getAllTeamsPage);
-router.get('/teams/:id', adminAuth, adminController.getTeamByIdPage); // Add this line
-
-// Registrations routes
+router.get('/teams/:id', adminAuth, adminController.getTeamByIdPage);
 router.get('/registrations', adminAuth, adminController.getAllRegistrationsPage);
 
 module.exports = router;

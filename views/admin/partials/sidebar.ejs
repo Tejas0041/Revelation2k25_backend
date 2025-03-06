@@ -37,9 +37,18 @@
     </ul>
 
     <div class="sidebar-footer">
-        <a href="/admin/logout" class="logout-btn">
+        <a href="#" onclick="confirmLogout(event)" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i>
             Logout
         </a>
     </div>
 </nav>
+
+<script>
+    function confirmLogout(e) {
+        e.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+            window.location.href = '/admin/logout';
+        }
+    }
+</script>

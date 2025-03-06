@@ -6,17 +6,17 @@ const eventRegistrationSchema = new mongoose.Schema({
         ref: 'Event',
         required: true
     },
-    registrationType: {
-        type: String,
-        enum: ['individual', 'team'],
-        required: true
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: function() {
             return this.registrationType === 'individual';
         }
+    },
+    registrationType: {
+        type: String,
+        enum: ['individual', 'team'],
+        required: true
     },
     teamId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -35,15 +35,7 @@ const eventRegistrationSchema = new mongoose.Schema({
     }
 });
 
-// Pre-save middleware to ensure either userId or teamId is present
-eventRegistrationSchema.pre('save', function(next) {
-    if (this.registrationType === 'individual' && !this.userId) {
-        next(new Error('userId is required for individual registration'));
-    } else if (this.registrationType === 'team' && !this.teamId) {
-        next(new Error('teamId is required for team registration'));
-    } else {
-        next();
-    }
-});
+// Add index for quick lookups
+eventRegistrationSchema.index({ event: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model('EventRegistration', eventRegistrationSchema);

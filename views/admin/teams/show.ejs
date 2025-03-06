@@ -7,30 +7,31 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <div class="container py-4">
-        <!-- Navigation -->
-        <nav class="mb-4">
+    <div class="admin-container">
+        <div class="back-nav mb-4">
             <a href="/admin/teams" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Teams
+                <i class="fas fa-arrow-left"></i> Back to Teams
             </a>
-        </nav>
+        </div>
 
-        <!-- Team Card -->
-        <div class="card shadow-sm mb-4">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div>
-                        <h1 class="h3 mb-2"><%= team.name %></h1>
-                        <span class="badge bg-<%= team.teamLeader.isIIESTian ? 'success' : 'warning' %>">
+                <div class="team-info-header">
+                    <h1 class="mb-2"><%= team.name %></h1>
+                    <div class="info-row">
+                        <span class="team-type-badge <%= team.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
                             <%= team.teamLeader.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team' %>
                         </span>
+                        
+                        <% if (team.eventRegistered) { %>
+                        <div class="event-info mt-2">
+                            <span class="event-label">Event Name:</span>
+                            <a href="/admin/event/<%= team.eventRegistered._id %>" class="event-link">
+                                <%= team.eventRegistered.name %>
+                            </a>
+                        </div>
+                        <% } %>
                     </div>
-                    <% if (team.eventRegistered) { %>
-                        <a href="/admin/event/<%= team.eventRegistered._id %>" 
-                           class="btn btn-outline-primary">
-                            <%= team.eventRegistered.name %>
-                        </a>
-                    <% } %>
                 </div>
 
                 <!-- Team Leader -->
@@ -115,5 +116,60 @@
             modal.show();
         }
     </script>
+
+    <style>
+        .team-info-header {
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .team-type-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            width: fit-content;
+        }
+
+        .team-type-badge.iiestian {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .team-type-badge.non-iiestian {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .event-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-label {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .event-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .event-link:hover {
+            color: #1d4ed8;
+        }
+
+        /* ...rest of existing styles... */
+    </style>
 </body>
 </html>

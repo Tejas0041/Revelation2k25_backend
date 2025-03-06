@@ -1569,7 +1569,6 @@ event-info span {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.7;
 }
 
 .event-hero-content {
@@ -2375,3 +2374,65 @@ td {
         margin-left: 0;
     }
 }
+
+/* ...existing styles... */
+
+/* Event Card Updates */
+.event-card .event-details h3 {
+    font-size: 1.25rem;  /* Increased from 1.125rem */
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+.event-info-item {
+    font-size: 1rem;  /* Increased from 0.875rem */
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.event-type-badge {
+    font-size: 0.875rem;  /* Increased from 0.75rem */
+    padding: 6px 12px;    /* Increased padding */
+}
+
+/* Team Card Updates */
+.team-card-header h3 {
+    font-size: 1.25rem;  /* Increased from 1.125rem */
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.team-leader .member-name {
+    font-size: 1.1rem;  /* Increased from 0.875rem */
+    font-weight: 500;
+}
+
+.team-leader .member-email {
+    font-size: 0.95rem;  /* Increased from 0.75rem */
+    color: #64748b;
+}
+
+.member-count {
+    font-size: 1rem;  /* Increased from 0.875rem */
+    color: #475569;
+    font-weight: 500;
+}
+
+.team-card-event {
+    font-size: 1rem;  /* Increased from 0.875rem */
+}
+
+.team-type-badge {
+    font-size: 0.875rem;  /* Increased from 0.75rem */
+    padding: 4px 12px;    /* Increased padding */
+}
+
+.team-members-preview {
+    font-size: 0.95rem;  /* Increased from 0.875rem */
+}
+
+/* ...rest of existing styles... */

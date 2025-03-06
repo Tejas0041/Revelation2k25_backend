@@ -3,74 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Teams - Revelation 2k25</title>
-    <link rel="stylesheet" href="/css/admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>All Teams</title>
 </head>
 <body>
     <div class="admin-container">
         <div class="page-header">
             <h2>All Teams</h2>
             <div class="filters">
-                <select id="eventFilter" onchange="filterTeams()">
+                <select id="collegeFilter" class="filter-select">
+                    <option value="">All Teams</option>
+                    <option value="iiestian">IIEST Teams</option>
+                    <option value="non-iiestian">Non-IIEST Teams</option>
+                </select>
+                <select id="eventFilter" class="filter-select">
                     <option value="">All Events</option>
-                    <% events.forEach(event => { %>
-                        <option value="<%= event._id %>"><%= event.name %></option>
+                    <% let uniqueEvents = new Set(); %>
+                    <% teams.forEach(team => { %>
+                        <% if (team.eventRegistered) { %>
+                            <% uniqueEvents.add(team.eventRegistered.name); %>
+                        <% } %>
+                    <% }); %>
+                    <% Array.from(uniqueEvents).sort().forEach(eventName => { %>
+                        <option value="<%= eventName %>"><%= eventName %></option>
                     <% }); %>
                 </select>
+                <button onclick="clearFilters()" class="btn btn-outline-secondary btn-sm clear-filter">Clear Filters</button>
             </div>
         </div>
 
-        <div class="teams-grid">
-            <% teams.forEach(team => { %>
-                <div class="team-card" data-event="<%= team.eventRegistered?._id || '' %>">
-                    <div class="team-card-header">
-                        <div>
-                            <h3><%= team.name %></h3>
-                            <span class="team-id">ID: <%= team._id %></span>
-                        </div>
-                        <span class="team-size-badge"><%= team.teamMembers.length + 1 %> Members</span>
-                    </div>
-
-                    <div class="team-card-event">
-                        <label>Event</label>
-                        <p><%= team.eventRegistered?.name || 'Not Registered' %></p>
-                    </div>
-
-                    <div class="team-card-preview">
-                        <div class="team-leader">
-                            <img src="<%= team.teamLeader.picture %>" alt="Team Leader">
-                            <div>
-                                <span class="member-name"><%= team.teamLeader.name %></span>
-                                <span class="member-role">Team Leader</span>
+        <% if (teams.length === 0) { %>
+            <div class="no-data-message-full">
+                <i class="fas fa-users"></i>
+                <h3>No Teams Found</h3>
+                <p>There are no teams registered yet.</p>
+            </div>
+        <% } else { %>
+            <div class="teams-grid">
+                <% teams.forEach(team => { %>
+                    <div class="team-card">
+                        <div class="team-header">
+                            <div class="team-title">
+                                <h3>
+                                    <%= team.name %>
+                                    <span class="team-type-badge <%= team.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                        <%= team.teamLeader.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team' %>
+                                    </span>
+                                </h3>
+                                <% if (team.eventRegistered) { %>
+                                    <div class="event-badge">
+                                        <%= team.eventRegistered.name %>
+                                    </div>
+                                <% } %>
                             </div>
                         </div>
-                        <div class="member-count">+<%= team.teamMembers.length %> members</div>
-                    </div>
 
-                    <div class="team-card-actions">
-                        <a href="/admin/teams/<%= team._id %>" class="btn btn-small">
-                            View Details
-                        </a>
+                        <div class="team-members-preview">
+                            <div class="leader-info">
+                                <small class="text-muted">Team Leader</small>
+                                <div class="member-row">
+                                    <div class="member-details">
+                                        <div class="member-name"><%= team.teamLeader.name %></div>
+                                        <div class="member-email"><%= team.teamLeader.email %></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="members-count">
+                                <small class="text-muted">Team Size</small>
+                                <div><%= team.teamMembers.length + 1 %> members</div>
+                            </div>
+                        </div>
+
+                        <div class="team-actions">
+                            <a href="/admin/teams/<%= team._id %>" class="btn btn-primary btn-sm">
+                                View Details
+                            </a>
+                        </div>
                     </div>
-                </div>
-            <% }); %>
-        </div>
+                <% }); %>
+            </div>
+        <% } %>
     </div>
 
+    <style>
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .team-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .team-header {
+            margin-bottom: 16px;
+        }
+
+        .team-title h3 {
+            font-size: 1.25rem;
+            margin: 0 0 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .team-type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .team-type-badge.iiestian {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .team-type-badge.non-iiestian {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .event-badge {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .team-members-preview {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .leader-info {
+            margin-bottom: 12px;
+        }
+
+        .member-row {
+            margin-top: 8px;
+        }
+
+        .member-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .member-name {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .member-email {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .members-count {
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            min-width: 160px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .clear-filter {
+            white-space: nowrap;
+            padding: 8px 16px;
+            min-width: max-content;
+        }
+
+        .no-data-message-full {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 24px;
+        }
+
+        .no-data-message-full i {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+
+        .no-data-message-full h3 {
+            color: #475569;
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .no-data-message-full p {
+            color: #64748b;
+            margin: 0;
+        }
+    </style>
+
     <script>
-    function filterTeams() {
-        const eventId = document.getElementById('eventFilter').value;
-        const teams = document.getElementsByClassName('team-card');
-        
-        Array.from(teams).forEach(team => {
-            if (!eventId || team.dataset.event === eventId) {
-                team.style.display = 'block';
-            } else {
-                team.style.display = 'none';
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('modal');
+            for (let modal of modals) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+
+        // Close modals when clicking close button
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.onclick = function() {
+                this.closest('.modal').style.display = 'none';
             }
         });
-    }
+
+        function showPaymentProof(imageUrl) {
+            const modal = document.createElement('div');
+            modal.id = 'paymentProofModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <img src="${imageUrl}" alt="Payment Proof">
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex';
+
+            // Close on clicking X or outside
+            modal.querySelector('.close-modal').onclick = () => {
+                modal.remove();
+            };
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+
+        function applyFilters() {
+            const collegeType = document.getElementById('collegeFilter').value;
+            const eventName = document.getElementById('eventFilter').value;
+            
+            document.querySelectorAll('.team-card').forEach(card => {
+                const typeMatch = !collegeType || card.querySelector(`.team-type-badge.${collegeType}`);
+                const eventMatch = !eventName || card.querySelector('.event-badge')?.textContent.trim() === eventName;
+                card.style.display = (typeMatch && eventMatch) ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('collegeFilter').value = '';
+            document.getElementById('eventFilter').value = '';
+            document.querySelectorAll('.team-card').forEach(card => {
+                card.style.display = '';
+            });
+        }
+
+        // Add event listeners
+        document.getElementById('collegeFilter').addEventListener('change', applyFilters);
+        document.getElementById('eventFilter').addEventListener('change', applyFilters);
     </script>
 </body>
 </html>

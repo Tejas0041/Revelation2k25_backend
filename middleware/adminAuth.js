@@ -4,6 +4,10 @@ const User = require('../models/userSchema');
 const adminAuth = async (req, res, next) => {
     try {
         const token = req.cookies.admin_token;
+        
+        // Pass token to views
+        res.locals.adminToken = token;
+
         if (!token) {
             if (req.path === '/login') {
                 return next();

@@ -5,142 +5,339 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Registrations - Revelation 2k25</title>
     <link rel="stylesheet" href="/css/admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="admin-container">
         <div class="page-header">
             <h2>All Registrations</h2>
+            
+            <!-- Filters Section -->
+            <div class="filters-row">
+                <select id="eventFilter" class="filter-select">
+                    <option value="">All Events</option>
+                    <% let uniqueEvents = [...new Set(registrations.map(reg => reg.event.name))]; %>
+                    <% uniqueEvents.forEach(eventName => { %>
+                        <option value="<%= eventName %>"><%= eventName %></option>
+                    <% }); %>
+                </select>
+                
+                <select id="typeFilter" class="filter-select">
+                    <option value="">All Types</option>
+                    <option value="individual">Individual</option>
+                    <option value="team">Team</option>
+                </select>
+
+                <select id="userTypeFilter" class="filter-select">
+                    <option value="">All Participants</option>
+                    <option value="iiestian">IIEST</option>
+                    <option value="non-iiestian">Non-IIEST</option>
+                </select>
+            </div>
         </div>
 
         <div class="registrations-table-container">
-            <table class="registrations-table">
-                <thead>
-                    <tr>
-                        <th>Event</th>
-                        <th>Type</th>
-                        <th>Participant</th>
-                        <th>Registered At</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% registrations.forEach(reg => { %>
+            <% if (registrations.length === 0) { %>
+                <div class="no-data-message-full">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>No Registrations Found</h3>
+                    <p>There are no event registrations yet.</p>
+                </div>
+            <% } else { %>
+                <table class="registrations-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <a href="/admin/event/<%= reg.event._id %>" class="event-link">
-                                    <%= reg.event.name %>
-                                </a>
-                            </td>
-                            <td><%= reg.registrationType.toUpperCase() %></td>
-                            <td>
-                                <% if (reg.registrationType === 'individual') { %>
-                                    <div class="user-info">
-                                        <img src="<%= reg.userId.picture %>" alt="" class="user-avatar">
-                                        <div class="user-details">
-                                            <a href="/admin/users/<%= reg.userId._id %>" class="user-name">
-                                                <%= reg.userId.name %>
-                                            </a>
-                                            <span class="user-type-badge <%= reg.userId.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
-                                                <%= reg.userId.isIIESTian ? 'IIEST' : 'Non-IIEST' %>
-                                            </span>
-                                        </div>
-                                    </div>
-                                <% } else { %>
-                                    <div class="team-info">
-                                        <%= reg.teamId.name %> 
-                                        (<%= reg.teamId.teamMembers.length + 1 %> members)
-                                    </div>
-                                <% } %>
-                            </td>
-                            <td>
-                                <%= new Date(reg.registeredAt).toLocaleDateString('en-IN') %>
-                                <span class="time">
-                                    <%= new Date(reg.registeredAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
-                                </span>
-                            </td>
-                            <td>
-                                <% if (reg.paymentProof?.url) { %>
-                                    <a href="<%= reg.paymentProof.url %>" target="_blank" class="btn btn-small">
-                                        View Payment
-                                    </a>
-                                <% } %>
-                            </td>
+                            <th>Event</th>
+                            <th>Type</th>
+                            <th>Participant</th>
+                            <th>Registered At</th>
+                            <th>Actions</th>
                         </tr>
-                    <% }); %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% registrations.forEach(reg => { %>
+                            <tr class="registration-row" 
+                                data-event="<%= reg.event.name %>"
+                                data-type="<%= reg.registrationType %>"
+                                data-user-type="<%= reg.registrationType === 'individual' ? 
+                                    (reg.userId.isIIESTian ? 'iiestian' : 'non-iiestian') :
+                                    (reg.teamId.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian') %>">
+                                <td>
+                                    <a href="/admin/event/<%= reg.event._id %>" class="event-name">
+                                        <%= reg.event.name %>
+                                    </a>
+                                </td>
+                                <td><%= reg.registrationType.toUpperCase() %></td>
+                                <td>
+                                    <% if (reg.registrationType === 'individual') { %>
+                                        <a href="/admin/users/<%= reg.userId._id %>" class="participant-link">
+                                            <div class="participant-info">
+                                                <%= reg.userId.name %>
+                                                <span class="user-type-badge <%= reg.userId.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                                    <%= reg.userId.isIIESTian ? 'IIEST' : 'Non-IIEST' %>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    <% } else { %>
+                                        <a href="/admin/teams/<%= reg.teamId._id %>" class="participant-link">
+                                            <div class="participant-info">
+                                                <%= reg.teamId.name %>
+                                                <span class="user-type-badge <%= reg.teamId.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                                    <%= reg.teamId.teamLeader.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team' %>
+                                                </span>
+                                                <div class="team-size">
+                                                    (<%= reg.teamId.teamMembers.length + 1 %> members)
+                                                </div>
+                                            </div>
+                                        </a>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <%= new Date(reg.registeredAt).toLocaleTimeString('en-IN', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit',
+                                        hour12: true 
+                                    }) %>
+                                    <div class="date">
+                                        <%= new Date(reg.registeredAt).toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        }) %>
+                                    </div>
+                                </td>
+                                <td>
+                                    <% if (reg.paymentProof?.url) { %>
+                                        <button onclick="showPaymentProof('<%= reg.paymentProof.url %>')" class="btn btn-small">
+                                            View Payment
+                                        </button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Payment Proof Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePaymentModal()">&times;</span>
+            <img id="paymentProofImage" src="" alt="Payment Proof">
         </div>
     </div>
 
     <style>
-        .registrations-table-container {
+        .filters-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
             background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-top: 24px;
-        }
-
-        .registrations-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .registrations-table th,
-        .registrations-table td {
-            padding: 16px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .registrations-table th {
-            background: #f8fafc;
             color: #475569;
-            font-weight: 600;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            min-width: 160px;
         }
 
-        .user-info {
+        .participant-link {
+            text-decoration: none;
+            color: #475569;
+            display: block;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+
+        .participant-link:hover {
+            color: #3b82f6;
+        }
+
+        .participant-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .team-size {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .date {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            position: relative;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: calc(90vh - 40px);
+            object-fit: contain;
+            display: block;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .event-link {
+        .event-name {
             color: #2563eb;
-            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-decoration: none !important;
         }
 
-        .event-link:hover {
-            text-decoration: underline;
+        .event-name:hover {
+            color: #1d4ed8;
         }
 
-        .user-type-badge {
-            padding: 2px 8px;
+        .no-data-message-full {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
             border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 24px;
+            width: 100%;
         }
 
-        .user-type-badge.iiestian {
-            background: #dcfce7;
-            color: #166534;
+        .no-data-message-full i {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            display: block;
         }
 
-        .user-type-badge.non-iiestian {
-            background: #fee2e2;
-            color: #991b1b;
+        .no-data-message-full h3 {
+            color: #475569;
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .no-data-message-full p {
+            color: #64748b;
+            margin: 0;
+        }
+
+        /* Update table header styles */
+        .registrations-table th {
+            font-size: 1rem !important; /* Increased from 0.875rem */
+            font-weight: 600;
+            color: #1e293b;
+            padding: 16px 20px;
+            text-transform: none;
+            letter-spacing: normal;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Update filters section */
+        .filters-row {
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .filter-select {
+            font-size: 1rem;
+            padding: 10px 16px;
+            min-width: 180px;
+        }
+
+        /* Update page title */
+        .page-header h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1e293b;
         }
     </style>
+
+    <script>
+        // Filter functionality
+        const filters = {
+            event: document.getElementById('eventFilter'),
+            type: document.getElementById('typeFilter'),
+            userType: document.getElementById('userTypeFilter')
+        };
+
+        function applyFilters() {
+            const selectedEvent = filters.event.value.toLowerCase();
+            const selectedType = filters.type.value.toLowerCase();
+            const selectedUserType = filters.userType.value.toLowerCase();
+
+            document.querySelectorAll('.registration-row').forEach(row => {
+                const eventMatch = !selectedEvent || row.dataset.event.toLowerCase().includes(selectedEvent);
+                const typeMatch = !selectedType || row.dataset.type === selectedType;
+                const userTypeMatch = !selectedUserType || row.dataset.userType === selectedUserType;
+
+                row.style.display = eventMatch && typeMatch && userTypeMatch ? '' : 'none';
+            });
+        }
+
+        // Add event listeners to filters
+        Object.values(filters).forEach(filter => {
+            filter.addEventListener('change', applyFilters);
+        });
+
+        // Modal functionality
+        function showPaymentProof(imageUrl) {
+            const modal = document.getElementById('paymentModal');
+            const modalImg = document.getElementById('paymentProofImage');
+            modal.style.display = 'flex';
+            modalImg.src = imageUrl;
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('paymentModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

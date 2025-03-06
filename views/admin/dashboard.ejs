@@ -3,165 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Revelation 2k25</title>
-    <link rel="stylesheet" href="/css/admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Admin Dashboard</title>
 </head>
 <body>
     <div class="admin-container">
-        <div class="page-header">
-            <h2>Admin Dashboard</h2>
-        </div>
-
-        <div class="dashboard-cards">
-            <div class="dashboard-card">
-                <h3>Users</h3>
-                <p>Manage user accounts and view user details.</p>
-                <a href="/admin/users" class="btn btn-primary">View All Users</a>
-            </div>
-
-            <div class="dashboard-card">
-                <h3>Events</h3>
-                <p>Create, edit, and manage event listings.</p>
-                <a href="/admin/events" class="btn btn-primary">View All Events</a>
-                <a href="/admin/events/new" class="btn btn-outline">Add New Event</a>
-            </div>
-
-            <div class="dashboard-card">
-                <h3>Registrations</h3>
-                <p>View and manage event registrations.</p>
-                <a href="/admin/registrations" class="btn btn-primary">View All Registrations</a>
-            </div>
-
-            <div class="dashboard-card">
-                <h3>Teams</h3>
-                <p>Manage teams and view team details.</p>
-                <a href="/admin/teams" class="btn btn-primary">View All Teams</a>
-            </div>
-        </div>
-
-        <div class="dashboard-stats">
-            <div class="stats-card">
-                <h3>Events</h3>
-                <div class="stats-number"><%= stats.totalEvents %></div>
-                <div class="stats-breakdown">
-                    <div class="breakdown-item">
-                        <span class="label">Active</span>
-                        <span class="value"><%= stats.activeEvents %></span>
+        <!-- Move Timer to top -->
+        <div class="event-timer-card mb-4">
+            <div class="timer-content">
+                <h3>Revelation 2k25</h3>
+                <div id="timer" class="timer-display">
+                    <div class="timer-item">
+                        <span class="timer-value" id="days">00</span>
+                        <span class="timer-label">Days</span>
                     </div>
-                    <div class="breakdown-item">
-                        <span class="label">Upcoming</span>
-                        <span class="value"><%= stats.upcomingEvents %></span>
+                    <div class="timer-item">
+                        <span class="timer-value" id="hours">00</span>
+                        <span class="timer-label">Hours</span>
+                    </div>
+                    <div class="timer-item">
+                        <span class="timer-value" id="minutes">00</span>
+                        <span class="timer-label">Minutes</span>
+                    </div>
+                    <div class="timer-item">
+                        <span class="timer-value" id="seconds">00</span>
+                        <span class="timer-label">Seconds</span>
+                    </div>
+                </div>
+                <div id="timerMessage" class="timer-message"></div>
+                <div id="live-badge" class="live-badge" style="display: none;">
+                    <span class="pulse"></span> LIVE
+                </div>
+            </div>
+        </div>
+
+        <h1 class="page-title mb-4">Dashboard Overview</h1>
+
+        <!-- Main Stats -->
+        <div class="stats-grid">
+            <!-- Events Stats -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3>Events</h3>
+                    <div class="total-badge"><%= stats.eventTypes.total %> Total</div>
+                </div>
+                <div class="stat-breakdown">
+                    <div class="stat-item">
+                        <span class="label">Single Events</span>
+                        <span class="value"><%= stats.eventTypes.single %></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">Team Events</span>
+                        <span class="value"><%= stats.eventTypes.team %></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">Combined Events</span>
+                        <span class="value"><%= stats.eventTypes.combined %></span>
                     </div>
                 </div>
             </div>
 
-            <div class="stats-card">
-                <h3>Users</h3>
-                <div class="stats-number"><%= stats.usersCount.total %></div>
-                <div class="stats-breakdown">
-                    <div class="breakdown-item iiestian">
-                        <span class="label">IIEST</span>
-                        <span class="value"><%= stats.usersCount.iiestian %></span>
+            <!-- Users Stats -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3>Users</h3>
+                    <div class="total-badge"><%= stats.users.total %> Total</div>
+                </div>
+                <div class="stat-breakdown">
+                    <div class="stat-item iiestian">
+                        <span class="label">IIEST Students</span>
+                        <span class="value"><%= stats.users.iiestian %></span>
                     </div>
-                    <div class="breakdown-item non-iiestian">
+                    <div class="stat-item non-iiestian">
                         <span class="label">Non-IIEST</span>
-                        <span class="value"><%= stats.usersCount.nonIiestian %></span>
+                        <span class="value"><%= stats.users.nonIiestian %></span>
                     </div>
                 </div>
             </div>
 
-            <div class="stats-card">
-                <h3>Registrations</h3>
-                <div class="stats-number"><%= stats.registrationsCount.total %></div>
-                <div class="stats-breakdown">
-                    <div class="breakdown-item">
+            <!-- Registrations Stats -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3>Registrations</h3>
+                    <div class="total-badge"><%= stats.registrations.total %> Total</div>
+                </div>
+                <div class="stat-breakdown">
+                    <div class="stat-item">
                         <span class="label">Individual</span>
-                        <span class="value"><%= stats.registrationsCount.individual %></span>
+                        <span class="value"><%= stats.registrations.individual %></span>
                     </div>
-                    <div class="breakdown-item">
+                    <div class="stat-item">
                         <span class="label">Team</span>
-                        <span class="value"><%= stats.registrationsCount.team %></span>
+                        <span class="value"><%= stats.registrations.team %></span>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Event-wise Registration Stats -->
+        <div class="event-stats-section">
+            <h2 class="section-title mb-4">Event-wise Registration Statistics</h2>
+            <% if (stats.eventStats.length === 0) { %>
+                <div class="no-data-message-full">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>No Event Statistics Available</h3>
+                    <p>There are no events or registrations to display statistics for.</p>
+                </div>
+            <% } else { %>
+                <div class="event-stats-grid">
+                    <% stats.eventStats.forEach(event => { %>
+                        <div class="event-stat-card">
+                            <div class="event-stat-header">
+                                <h4><%= event.name %></h4>
+                                <span class="event-type-badge <%= event.type.toLowerCase() %>">
+                                    <%= event.type %>
+                                </span>
+                            </div>
+
+                            <div class="registration-stats">
+                                <div class="stat-row total">
+                                    <span class="label">Total Registrations</span>
+                                    <span class="value"><%= event.registrations.total %></span>
+                                </div>
+                                
+                                <% if (event.type !== 'Single') { %>
+                                    <div class="stat-row">
+                                        <span class="label">Individual</span>
+                                        <span class="value"><%= event.registrations.individual %></span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span class="label">Team</span>
+                                        <span class="value"><%= event.registrations.team %></span>
+                                    </div>
+                                <% } %>
+
+                                <div class="college-breakdown">
+                                    <div class="stat-row iiestian">
+                                        <span class="label">IIEST</span>
+                                        <span class="value"><%= event.registrations.iiestian %></span>
+                                    </div>
+                                    <div class="stat-row non-iiestian">
+                                        <span class="label">Non-IIEST</span>
+                                        <span class="value"><%= event.registrations.nonIiestian %></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } %>
         </div>
     </div>
 
     <style>
-        .dashboard-cards {
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
-            margin-bottom: 32px;
+            margin-bottom: 48px;
         }
 
-        .dashboard-card {
+        .stat-card {
             background: white;
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .dashboard-card h3 {
-            margin: 0 0 16px 0;
-            color: #1e293b;
-            font-size: 1.25rem;
-        }
-
-        .dashboard-card p {
-            color: #64748b;
-            margin-bottom: 24px;
-        }
-
-        .dashboard-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-        }
-
-        .stats-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .stats-card h3 {
-            margin: 0 0 16px 0;
-            color: #1e293b;
-            font-size: 1.25rem;
-        }
-
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 16px;
-        }
-
-        .stats-breakdown {
+        .stat-header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .total-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stat-breakdown {
+            display: flex;
+            flex-direction: column;
             gap: 12px;
         }
 
-        .breakdown-item {
-            flex: 1;
-            padding: 12px;
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
             background: #f8fafc;
             border-radius: 8px;
-            text-align: center;
         }
 
-        .breakdown-item.iiestian {
+        .stat-item.iiestian {
             background: #dcfce7;
             color: #166534;
         }
 
-        .breakdown-item.non-iiestian {
+        .stat-item.non-iiestian {
             background: #fee2e2;
             color: #991b1b;
         }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            min-width: 160px;
+        }
+
+        .event-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .event-stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .event-stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .event-type-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .event-type-badge.single {
+            background: rgba(219, 234, 254, 0.8);
+            color: #1e40af;
+        }
+
+        .event-type-badge.team {
+            background: rgba(220, 252, 231, 0.8);
+            color: #166534;
+        }
+
+        .event-type-badge.combined {
+            background: rgba(243, 232, 255, 0.8);
+            color: #6b21a8;
+        }
+
+        .registration-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+
+        .stat-row.total {
+            background: #f1f5f9;
+            font-weight: 500;
+        }
+
+        .college-breakdown {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .event-timer-card {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+        }
+
+        .timer-content {
+            text-align: center;
+        }
+
+        .timer-content h3 {
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .timer-display {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 20px 0;
+        }
+
+        .timer-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .timer-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+            font-family: monospace;
+        }
+
+        .timer-label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 4px;
+        }
+
+        .timer-message {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        .page-title,
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn.btn-outline-secondary {
+            white-space: nowrap;
+            padding: 8px 16px;
+            min-width: max-content;
+        }
+
+        .no-data-message-full {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+
+        .no-data-message-full i {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+
+        .no-data-message-full h3 {
+            color: #475569;
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .no-data-message-full p {
+            color: #64748b;
+            margin: 0;
+        }
     </style>
+
+    <script>
+        function updateTimer() {
+            const targetDate = new Date('2025-03-21T00:00:00+05:30'); // Add IST timezone offset
+            const now = new Date();
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                if (document.getElementById('timer')) {
+                    document.getElementById('timer').style.display = 'none';
+                    document.getElementById('timerMessage').style.display = 'none';
+                    document.getElementById('live-badge').style.display = 'inline-flex';
+                }
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            if (document.getElementById('days')) {
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            }
+
+            // Update message
+            const message = document.getElementById('timerMessage');
+            message.textContent= "Until Revelation 2k25 begins";
+        }
+
+        // Start timer when DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        });
+    </script>
 </body>
 </html>

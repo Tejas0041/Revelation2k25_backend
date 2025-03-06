@@ -3,359 +3,430 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= user.name %> - User Details</title>
+    <title><%= user.name %> - Profile</title>
     <link rel="stylesheet" href="/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="admin-container">
-        <div class="page-header">
-            <div class="nav-title">
-                <h2>User Details</h2>
-                <span class="user-type-badge <%= user.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
-                    <%= user.isIIESTian ? 'IIEST Student' : 'Non IIEST' %>
-                </span>
-            </div>
-            <a href="/admin/users" class="btn btn-secondary">
-                <span class="btn-icon">←</span> Back to Users
+        <!-- Back Button -->
+        <div class="back-nav mb-4">
+            <a href="/admin/users" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Users
             </a>
         </div>
 
-        <div class="user-detail-card">
-            <div class="user-header">
-                <img src="<%= user.picture %>" alt="<%= user.name %>" class="user-detail-avatar">
-                <div class="user-header-info">
-                    <h1><%= user.name %></h1>
-                    <div class="user-meta">
-                        <span class="meta-item">
-                            <svg viewBox="0 0 24 24" class="icon"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
-                            <%= user.email %>
-                        </span>
-                        <% if(user.phoneNumber) { %>
-                            <span class="meta-item">
-                                <svg viewBox="0 0 24 24" class="icon"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                                <%= user.phoneNumber %>
+        <!-- User Profile Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="profile-header">
+                    <img src="<%= user.picture %>" 
+                         alt="<%= user.name %>" 
+                         class="profile-avatar">
+                    <div class="profile-info">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <h1 class="mb-0"><%= user.name %></h1>
+                            <span class="badge <%= user.isIIESTian ? 'badge-iiestian' : 'badge-non-iiestian' %>">
+                                <%= user.isIIESTian ? 'IIEST Student' : 'Non-IIEST' %>
                             </span>
+                        </div>
+                        <p class="text-secondary mb-1"><%= user.email %></p>
+                        <% if (user.phoneNumber) { %>
+                            <p class="text-secondary mb-0"><%= user.phoneNumber %></p>
                         <% } %>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="registered-events">
-                <h2>Registered Events</h2>
-                <% if (registrations && registrations.length > 0) { %>
+        <!-- Registered Events Section -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="section-header">
+                    <div class="title-count">
+                        <h2 class="card-title h4 mb-0">Registered Events</h2>
+                        <span class="total-count"><%= registrations.individual.length + registrations.team.length %> Events</span>
+                    </div>
+                </div>
+                
+                <% if (registrations.individual.length === 0 && registrations.team.length === 0) { %>
+                    <div class="no-data-message-full">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>No Registrations</h3>
+                        <p>This user hasn't registered for any events yet.</p>
+                    </div>
+                <% } else { %>
                     <div class="events-list">
-                        <% registrations.forEach((registration, index) => { %>
+                        <% [...registrations.individual, ...registrations.team]
+                            .sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt))
+                            .forEach((reg, index) => { %>
                             <div class="event-item">
-                                <div class="event-item-header">
-                                    <div class="event-title">
-                                        <span class="event-number">#<%= index + 1 %></span>
-                                        <h3><%= registration.event.name %></h3>
+                                <div class="event-number">#<%= index + 1 %></div>
+                                <div class="event-info">
+                                    <a href="/admin/event/<%= reg.event._id %>" class="event-name">
+                                        <%= reg.event.name %>
+                                    </a>
+                                    <div class="registration-meta">
+                                        <span class="registration-time">
+                                            <i class="far fa-clock"></i>
+                                            Registered on <%= new Date(reg.registeredAt).toLocaleString('en-US', {
+                                                hour: 'numeric',
+                                                minute: '2-digit',
+                                                hour12: true,
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric'
+                                            }) %>
+                                        </span>
+                                        <% if (reg.team) { %>
+                                            <span class="type-badge team">Team</span>
+                                            <a href="/admin/teams/<%= reg.team._id %>" class="team-name">
+                                                <%= reg.team.name %>
+                                            </a>
+                                        <% } else { %>
+                                            <span class="type-badge individual">Individual</span>
+                                        <% } %>
                                     </div>
-                                    <span class="event-type <%= registration.registrationType %>">
-                                        <%= registration.registrationType === 'team' ? 'Team' : 'Individual' %>
-                                    </span>
-                                </div>
-                                
-                                <div class="event-details-grid">
-                                    <% if (registration.registrationType === 'team' && registration.teamId) { %>
-                                        <div class="team-details">
-                                            <div class="team-header">
-                                                <div class="team-title-wrapper">
-                                                    <h4 onclick="viewTeamDetails('<%= registration.teamId._id %>')" style="cursor: pointer;">
-                                                        <%= registration.teamId.name %>
-                                                    </h4>
-                                                    <span class="team-type-badge <%= registration.teamId.teamLeader.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
-                                                        <%= registration.teamId.teamLeader.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team' %>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <% } %>
                                 </div>
                             </div>
                         <% }); %>
                     </div>
-                <% } else { %>
-                    <div class="no-events">
-                        <p>No events registered yet</p>
-                    </div>
                 <% } %>
             </div>
         </div>
+
+        
     </div>
-
-    <!-- Payment Proof Modal -->
-    <div id="paymentModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <img id="paymentProofImage" src="" alt="Payment Proof">
-        </div>
-    </div>
-
-    <!-- Add Team Modal -->
-    <div id="teamModal" class="modal">
-        <div class="modal-content team-modal">
-            <span class="close-modal">&times;</span>
-            <div id="teamDetails"></div>
-        </div>
-    </div>
-
-    <script>
-        // Modal functionality
-        const modal = document.getElementById('paymentModal');
-        const modalImg = document.getElementById('paymentProofImage');
-        const closeModal = document.querySelector('.close-modal');
-
-        function showPaymentProof(imageUrl) {
-            modal.style.display = "flex";
-            modalImg.src = imageUrl;
-        }
-
-        closeModal.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target === modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        async function viewTeamDetails(teamId) {
-            try {
-                const response = await fetch(`/admin/teams/${teamId}`);
-                if (!response.ok) throw new Error('Failed to fetch team details');
-                const team = await response.json();
-                
-                const modal = document.getElementById('teamModal');
-                const detailsDiv = document.getElementById('teamDetails');
-                
-                detailsDiv.innerHTML = `
-                    <div class="team-full-details">
-                        <div class="team-info-section">
-                            <div class="team-header">
-                                <div class="team-name-badge">
-                                    <h2>${team.name}</h2>
-                                    <span class="team-type-badge ${team.teamLeader?.isIIESTian ? 'iiestian' : 'non-iiestian'}">
-                                        ${team.teamLeader?.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team'}
-                                    </span>
-                                </div>
-                                <span class="team-size-badge">${team.teamMembers.length + 1} Members</span>
-                            </div>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <div class="info-label-value">
-                                        <label>Event:</label>
-                                        <span>${team.event ? `<a href="/admin/event/${team.event._id}" class="event-link">${team.event.name}</a>` : 'N/A'}</span>
-                                    </div>
-                                </div>
-                                ${team.registeredAt ? `
-                                    <div class="info-item">
-                                        <div class="info-label-value">
-                                            <label>Registration Time:</label>
-                                            <span>${new Date(team.registeredAt).toLocaleDateString('en-IN', { 
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                                year: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                                hour12: true
-                                            })}</span>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-
-                        <div class="team-members-section">
-                            <h3>Team Members</h3>
-                            <div class="detailed-members-list">
-                                <div class="detailed-member leader">
-                                    <span class="role-badge leader">Team Leader</span>
-                                    <div class="member-main">
-                                        <div class="member-avatar-name">
-                                            <img src="${team.teamLeader.picture}" alt="${team.teamLeader.name}">
-                                            <a href="/admin/users/${team.teamLeader._id}" class="member-name">${team.teamLeader.name}</a>
-                                        </div>
-                                        <div class="member-contact">
-                                            <span>
-                                                <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
-                                                ${team.teamLeader.email}
-                                            </span>
-                                            ${team.leaderPhone ? `
-                                                <span>
-                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                                                    ${team.leaderPhone}
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                ${team.teamMembers.map(member => `
-                                    <div class="detailed-member">
-                                        <span class="role-badge">Team Member</span>
-                                        <div class="member-main">
-                                            <div class="member-avatar-name">
-                                                <img src="${member.picture}" alt="${member.name}">
-                                                <a href="/admin/users/${member._id}" class="member-name">${member.name}</a>
-                                            </div>
-                                            <div class="member-contact">
-                                                <span>
-                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
-                                                    ${member.email}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        ${team.paymentProof ? `
-                            <div class="payment-section">
-                                <h3>Payment Details</h3>
-                                <button onclick="showPaymentProof('${team.paymentProof.url}')" class="btn btn-small">
-                                    View Payment Proof
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-                modal.style.display = 'flex';
-            } catch (error) {
-                console.error('Error fetching team details:', error);
-            }
-        }
-
-        function renderTeamDetails(team) {
-            return `
-                    <div class="team-full-details">
-                        <div class="team-info-section">
-                            <div class="team-header">
-                                <div class="team-name-badge">
-                                    <h2>${team.name}</h2>
-                                    <span class="team-type-badge ${team.teamLeader?.isIIESTian ? 'iiestian' : 'non-iiestian'}">
-                                        ${team.teamLeader?.isIIESTian ? 'IIEST Team' : 'Non-IIEST Team'}
-                                    </span>
-                                </div>
-                                <span class="team-size-badge">${team.teamMembers.length + 1} Members</span>
-                            </div>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <div class="info-label-value">
-                                        <label>Event:</label>
-                                        <span>${team.event ? `<a href="/admin/event/${team.event._id}" class="event-link">${team.event.name}</a>` : 'N/A'}</span>
-                                    </div>
-                                </div>
-                                ${team.registeredAt ? `
-                                    <div class="info-item">
-                                        <div class="info-label-value">
-                                            <label>Registration Time:</label>
-                                            <span>${formatDate(team.registeredAt)}</span>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-
-                        <div class="team-members-section">
-                            <h3>Team Members</h3>
-                            <div class="detailed-members-list">
-                                <div class="detailed-member leader">
-                                    <span class="role-badge leader">Team Leader</span>
-                                    <div class="member-main">
-                                        <div class="member-avatar-name">
-                                            <img src="${team.teamLeader.picture}" alt="${team.teamLeader.name}">
-                                            <a href="/admin/users/${team.teamLeader._id}" class="member-name">${team.teamLeader.name}</a>
-                                        </div>
-                                        <div class="member-contact">
-                                            <span>
-                                                <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
-                                                ${team.teamLeader.email}
-                                            </span>
-                                            ${team.leaderPhone ? `
-                                                <span>
-                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                                                    ${team.leaderPhone}
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                ${team.teamMembers.map(member => `
-                                    <div class="detailed-member">
-                                        <span class="role-badge">Team Member</span>
-                                        <div class="member-main">
-                                            <div class="member-avatar-name">
-                                                <img src="${member.picture}" alt="${member.name}">
-                                                <a href="/admin/users/${member._id}" class="member-name">${member.name}</a>
-                                            </div>
-                                            <div class="member-contact">
-                                                <span>
-                                                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
-                                                    ${member.email}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        ${team.paymentProof ? `
-                            <div class="payment-section">
-                                <h3>Payment Details</h3>
-                                <button onclick="showPaymentProof('${team.paymentProof.url}')" class="btn btn-small">
-                                    View Payment Proof
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-        }
-
-        // Modal close functionality
-        const modals = document.querySelectorAll('.modal');
-        const closeBtns = document.querySelectorAll('.close-modal');
-
-        closeBtns.forEach(btn => {
-            btn.onclick = function() {
-                btn.closest('.modal').style.display = "none";
-            }
-        });
-
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
-            }
-        }
-    </script>
 
     <style>
-        .team-title-wrapper {
+        .profile-header {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .profile-info h1 {
+            font-size: 1.75rem;
+            color: #1e293b;
+        }
+
+        .badge {
+            padding: 0.5rem 1.25rem; /* Increased padding */
+            font-weight: 500;
+            font-size: 1rem; /* Increased from 0.875rem */
+            border-radius: 20px;
+        }
+
+        .badge-iiestian {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-non-iiestian {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            transition: transform 0.2s;
+        }
+
+        .event-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .event-number {
+            background: #e2e8f0;
+            color: #475569;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .event-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Increased from 4px */
+        }
+
+        .event-name {
+            color: #1e40af;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 1.25rem; /* Increased from 1.1rem */
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-name:hover {
+            text-decoration: underline;
+        }
+
+        .registration-type {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .team-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .team-link:hover {
+            text-decoration: underline;
+        }
+
+        .individual-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .event-date {
+            color: #64748b;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .no-events i {
+            font-size: 2.5rem;
+            display: block;
+            color: #cbd5e1;
+        }
+
+        /* Consistent Button Styles */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-outline-secondary {
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            background: white;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #f8fafc;
+            color: #1e293b;
+            border-color: #94a3b8;
+        }
+
+        .back-nav {
+            position: sticky;
+            top: 1rem;
+            z-index: 10;
+        }
+
+        .event-count {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-team {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-individual {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .registration-details {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .team-participation {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .role-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .event-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .registrations-section {
+            margin-top: 2rem;
+        }
+
+        .registration-group {
+            margin-bottom: 2rem;
+        }
+
+        .registrations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .registration-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .registration-card h5 {
+            margin: 0 0 0.5rem 0;
+            color: #1e293b;
+        }
+
+        .team-info {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .role-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .role-badge.leader {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .role-badge.member {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .date {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .section-header {
+            margin-bottom: 24px;
+        }
+
+        .title-count {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .event-link {
-            color: #2563eb;
-            text-decoration: none;
+        .total-count {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 6px 16px; /* Increased padding */
+            border-radius: 20px;
+            font-size: 1rem; /* Increased from 0.875rem */
+            font-weight: 500;
         }
 
-        .event-link:hover {
+        .registration-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+            color: #64748b;
+            font-size: 1rem; /* Increased from 0.875rem */
+        }
+
+        .registration-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .type-badge {
+            padding: 4px 12px; /* Increased padding */
+            border-radius: 12px;
+            font-size: 0.875rem; /* Increased from 0.75rem */
+            font-weight: 500;
+        }
+
+        .type-badge.team {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .type-badge.individual {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .team-name {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem; /* Added font size */
+        }
+
+        .team-name:hover {
             text-decoration: underline;
         }
 
-        .member-contact {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            font-size: 0.875rem;
-            color: #6b7280;
+        h2.card-title {
+            font-size: 1.5rem !important; /* Increased from h4 size */
+            font-weight: 600;
         }
     </style>
 </body>

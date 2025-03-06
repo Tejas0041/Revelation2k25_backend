@@ -25,6 +25,33 @@
             border: 1px solid #e2e8f0;
             background: white;
         }
+
+        .no-data-message-full {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 24px;
+        }
+
+        .no-data-message-full i {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .no-data-message-full h3 {
+            color: #475569;
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .no-data-message-full p {
+            color: #64748b;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -46,42 +73,50 @@
         </div>
 
         <div class="users-table-container">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th width="35%">Name</th>
-                        <th width="35%">Email</th>
-                        <th width="15%">Events</th>
-                        <th width="15%">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% users.forEach(user => { %>
+            <% if (users.length === 0) { %>
+                <div class="no-data-message-full">
+                    <i class="fas fa-user-friends"></i>
+                    <h3>No Users Found</h3>
+                    <p>There are no registered users yet.</p>
+                </div>
+            <% } else { %>
+                <table class="users-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="user-info">
-                                    <img src="<%= user.picture %>" alt="<%= user.name %>" class="user-avatar">
-                                    <div class="user-name-type">
-                                        <span class="user-name"><%= user.name %></span>
-                                        <span class="user-type-indicator <%= user.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
-                                            <%= user.isIIESTian ? 'IIEST Student' : 'Non IIEST' %>
-                                        </span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><%= user.email %></td>
-                            <td>
-                                <span class="event-count">
-                                    <%= user.registrations ? user.registrations.length : 0 %> Events
-                                </span>
-                            </td>
-                            <td>
-                                <a href="/admin/users/<%= user._id %>" class="btn btn-small">View Details</a>
-                            </td>
+                            <th width="35%">Name</th>
+                            <th width="35%">Email</th>
+                            <th width="15%">Events</th>
+                            <th width="15%">Actions</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(user => { %>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <img src="<%= user.picture %>" alt="<%= user.name %>" class="user-avatar">
+                                        <div class="user-name-type">
+                                            <span class="user-name"><%= user.name %></span>
+                                            <span class="user-type-indicator <%= user.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
+                                                <%= user.isIIESTian ? 'IIEST Student' : 'Non IIEST' %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><%= user.email %></td>
+                                <td>
+                                    <span class="event-count">
+                                        <%= user.registrationCount %> <%= user.registrationCount === 1 ? 'Event' : 'Events' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/admin/users/<%= user._id %>" class="btn btn-small">View Details</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } %>
         </div>
     </div>
 

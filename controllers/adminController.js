@@ -9,7 +9,10 @@ const streamifier = require('streamifier');
 
 
 module.exports.loginPage = (req, res) => {
-    res.render('admin/login', { error: null });
+    res.render('admin/login', { 
+        error: null,
+        path: 'login'
+    });
 };
 
 module.exports.login = async (req, res) => {
@@ -18,68 +21,98 @@ module.exports.login = async (req, res) => {
     try {
         const admin = await User.findOne({ name, type: 'admin' });
         if (!admin || !(await admin.comparePassword(password))) {
-            return res.render('admin/login', { error: 'Invalid credentials' });
+            return res.render('admin/login', { 
+                error: 'Invalid credentials',
+                path: 'login'
+            });
         }
 
         const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
         res.cookie('admin_token', token, { httpOnly: true });
-        res.redirect('/admin/dashboard');
+        
+        // Send token in response for localStorage
+        return res.json({ 
+            success: true, 
+            token,
+            redirect: '/admin/dashboard'
+        });
     } catch (error) {
-        res.render('admin/login', { error: 'Server error' });
+        res.render('admin/login', { 
+            error: 'Server error',
+            path: 'login'
+        });
     }
 };
 
 // Update dashboard stats to use EventRegistration
 module.exports.dashboard = async (req, res) => {
     try {
-        // Get current date for active events calculation
-        const now = new Date();
+        // Get all events with their registrations
+        const events = await Event.find();
+        
+        // Get event type counts
+        const eventTypes = {
+            total: events.length,
+            single: events.filter(e => e.type === 'Single').length,
+            team: events.filter(e => e.type === 'Team').length,
+            combined: events.filter(e => e.type === 'Combined').length
+        };
 
-        const [
-            totalEvents,
-            activeEvents,
-            upcomingEvents,
-            totalUsers,
-            iiestianUsers,
-            totalRegistrations,
-            individualRegistrations,
-            teamRegistrations
-        ] = await Promise.all([
-            Event.countDocuments(),
-            Event.countDocuments({
-                startTime: { $lte: now },
-                endTime: { $gte: now }
-            }),
-            Event.countDocuments({
-                startTime: { $gt: now }
-            }),
+        // Get user counts
+        const [totalUsers, iiestianUsers] = await Promise.all([
             User.countDocuments({ type: 'normal' }),
-            User.countDocuments({ type: 'normal', isIIESTian: true }),
-            EventRegistration.countDocuments(),
-            EventRegistration.countDocuments({ registrationType: 'individual' }),
-            EventRegistration.countDocuments({ registrationType: 'team' })
+            User.countDocuments({ type: 'normal', isIIESTian: true })
         ]);
 
-        const stats = {
-            totalEvents,
-            activeEvents,
-            upcomingEvents,
-            usersCount: {
-                total: totalUsers,
-                iiestian: iiestianUsers,
-                nonIiestian: totalUsers - iiestianUsers
-            },
-            registrationsCount: {
-                total: totalRegistrations,
-                individual: individualRegistrations,
-                team: teamRegistrations
-            }
-        };
+        // Get registration counts
+        const [totalRegs, individualRegs] = await Promise.all([
+            EventRegistration.countDocuments(),
+            EventRegistration.countDocuments({ registrationType: 'individual' })
+        ]);
+
+        // Get event-wise stats
+        const eventStats = await Promise.all(events.map(async (event) => {
+            const registrations = await EventRegistration.find({ event: event._id })
+                .populate('userId teamId');
+
+            const stats = {
+                name: event.name,
+                type: event.type,
+                registrations: {
+                    total: registrations.length,
+                    individual: registrations.filter(r => r.registrationType === 'individual').length,
+                    team: registrations.filter(r => r.registrationType === 'team').length,
+                    iiestian: registrations.filter(r => 
+                        (r.registrationType === 'individual' && r.userId?.isIIESTian) ||
+                        (r.registrationType === 'team' && r.teamId?.teamLeader?.isIIESTian)
+                    ).length,
+                    nonIiestian: registrations.filter(r => 
+                        (r.registrationType === 'individual' && !r.userId?.isIIESTian) ||
+                        (r.registrationType === 'team' && !r.teamId?.teamLeader?.isIIESTian)
+                    ).length
+                }
+            };
+
+            return stats;
+        }));
 
         res.render('admin/dashboard', {
             title: 'Dashboard',
-            path: '/dashboard',
-            stats
+            path: 'dashboard',
+            stats: {
+                eventTypes,
+                users: {
+                    total: totalUsers,
+                    iiestian: iiestianUsers,
+                    nonIiestian: totalUsers - iiestianUsers
+                },
+                registrations: {
+                    total: totalRegs,
+                    individual: individualRegs,
+                    team: totalRegs - individualRegs
+                },
+                eventStats
+            }
         });
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -123,6 +156,8 @@ module.exports.createAdmin = async (req, res) => {
 
 module.exports.createEventPage = (req, res) => {
     res.render('admin/events/new', { 
+        title: 'Create Event',
+        path: '/events',
         error: null,
         formData: {
             name: '',
@@ -300,22 +335,30 @@ module.exports.updateEvent = async (req, res) => {
 
 module.exports.getAllUsersPage = async (req, res) => {
     try {
-        // Get all non-admin users with their registrations
         const users = await User.find({ type: 'normal' }).sort({ name: 'asc' });
         
-        // Get registrations for each user
         const usersWithRegistrations = await Promise.all(users.map(async (user) => {
-            const registrations = await EventRegistration.find({
-                $or: [
-                    { userId: user._id },
-                    { 'teamId.teamLeader': user._id },
-                    { 'teamId.teamMembers': user._id }
-                ]
-            }).populate('event');
+            // Get both individual and team registrations for the user
+            const [individualRegs, teamRegs] = await Promise.all([
+                // Individual registrations
+                EventRegistration.find({
+                    userId: user._id,
+                    registrationType: 'individual'
+                }).countDocuments(),
+                // Team registrations where user is either leader or member
+                Team.find({
+                    $or: [
+                        { teamLeader: user._id },
+                        { teamMembers: user._id }
+                    ]
+                }).countDocuments()
+            ]);
+
+            const totalEvents = individualRegs + teamRegs;
 
             return {
                 ...user.toObject(),
-                registrations
+                registrationCount: totalEvents
             };
         }));
 
@@ -333,17 +376,23 @@ module.exports.getAllUsersPage = async (req, res) => {
     }
 };
 
-module.exports.getUserByIdPage = async (req, res) => {
+exports.getUserByIdPage = async (req, res) => {
     try {
-        const [user, registrations] = await Promise.all([
+        const [user, individualRegistrations, teams] = await Promise.all([
             User.findById(req.params.id),
+            // Get individual registrations
             EventRegistration.find({
+                userId: req.params.id,
+                registrationType: 'individual'
+            }).populate('event'),
+            // Get teams where user is either leader or member
+            Team.find({
                 $or: [
-                    { userId: req.params.id },
-                    { 'teamId.teamLeader': req.params.id },
-                    { 'teamId.teamMembers': req.params.id }
+                    { teamLeader: req.params.id },
+                    { teamMembers: req.params.id }
                 ]
-            }).populate('event')
+            }).populate('teamLeader', 'name email')
+              .populate('teamMembers', 'name email')
         ]);
 
         if (!user) {
@@ -353,16 +402,38 @@ module.exports.getUserByIdPage = async (req, res) => {
             });
         }
 
+        // Get event registrations for all teams
+        const teamRegistrations = await EventRegistration.find({
+            teamId: { $in: teams.map(team => team._id) },
+            registrationType: 'team'
+        }).populate('event');
+
+        // Combine team data with registrations
+        const teamParticipations = teams.map(team => {
+            const registration = teamRegistrations.find(reg => 
+                reg.teamId.toString() === team._id.toString()
+            );
+            return {
+                team: team,
+                event: registration?.event,
+                registeredAt: registration?.registeredAt,
+                isLeader: team.teamLeader._id.toString() === user._id.toString()
+            };
+        });
+
         res.render('admin/users/show', {
             user,
-            registrations,
+            registrations: {
+                individual: individualRegistrations,
+                team: teamParticipations
+            },
             title: user.name,
             path: '/users'
         });
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).render('error', {
-            message: 'Error fetching user',
+            message: 'Error fetching user details',
             error: process.env.NODE_ENV === 'development' ? error : {}
         });
     }
@@ -382,9 +453,11 @@ module.exports.getEventByIdPage = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
         if (!event) {
-            return res.status(404).render('error', { 
+            return res.render('error', { 
                 title: 'Error',
-                error: 'Event not found' 
+                message: 'Event not found',
+                error: null,
+                path: '/events'
             });
         }
         res.render('admin/events/show', { 
@@ -394,9 +467,11 @@ module.exports.getEventByIdPage = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching event:', error);
-        res.status(500).render('error', { 
+        res.render('error', { 
             title: 'Error',
-            error: 'Error fetching event details'
+            message: 'Error fetching event details',
+            error: process.env.NODE_ENV === 'development' ? error : null,
+            path: '/events'
         });
     }
 };
@@ -437,19 +512,21 @@ module.exports.getAllTeamsPage = async (req, res) => {
     }
 };
 
-module.exports.getTeamById = async (req, res) => {
+exports.getTeamById = async (req, res) => {
     try {
         const team = await Team.findById(req.params.id)
             .populate('teamLeader', 'name email picture isIIESTian')
-            .populate('teamMembers', 'name email picture')
-            .populate('event');
+            .populate('teamMembers', 'name email picture isIIESTian')
+            .exec();
 
         if (!team) {
             return res.status(404).json({ message: 'Team not found' });
         }
 
-        const registration = await EventRegistration.findOne({ teamId: team._id })
-            .populate('event');
+        const registration = await EventRegistration.findOne({ 
+            teamId: team._id,
+            registrationType: 'team'
+        }).populate('event').exec();
 
         const teamData = {
             ...team.toObject(),

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User= require("./models/userSchema.js");  
+const User= require("../models/userSchema.js");  
 
 const authenticateToken = (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
@@ -8,7 +8,7 @@ const authenticateToken = (req, res, next) => {
   
     jwt.verify(token, process.env.JWT_SECRET, async(err, user) => {
       if (err) return res.status(403).json({ message: "Forbidden" });
-      req.user = await User.findById(user.id);
+      req.user = await User.findById(user.id).populate('eventsRegistered.id eventsRegistered.teamId');
       next();
     });
 };
