@@ -22,14 +22,13 @@ app.use((req, res, next) => {
     next();
 });
 
-// Middleware
 app.use(express.static('public'));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ 
-    origin: "http://localhost:5173", 
-    // origin: "https://revelation2k25-frontend-testing.vercel.app",
+    // origin: "http://localhost:5173", 
+    origin: "https://revelation2k25-frontend-testing.vercel.app",
     credentials: true 
 }));
 app.use(methodOverride('_method'));
