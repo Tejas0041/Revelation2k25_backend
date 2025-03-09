@@ -8,10 +8,8 @@ const methodOverride = require('method-override');
 const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
 
-// Connect to database
 connectDB();
 
-// View engine setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
@@ -19,7 +17,6 @@ app.set('layout', 'admin/layout');
 app.set("layout extractScripts", true);
 app.set("layout extractStyles", true);
 
-// Add path to res.locals for nav highlighting
 app.use((req, res, next) => {
     res.locals.path = req.path.split('/')[1] || 'dashboard';
     next();
@@ -31,8 +28,8 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ 
-    // origin: "http://localhost:5173", 
-    origin: "https://revelation2k25-frontend-testing.vercel.app",
+    origin: "http://localhost:5173", 
+    // origin: "https://revelation2k25-frontend-testing.vercel.app",
     credentials: true 
 }));
 app.use(methodOverride('_method'));
@@ -41,20 +38,17 @@ app.get('/', (req, res) => {
     return res.redirect('/admin/login');
 });
 
-// Routes
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 
-// Handle 404 - Keep this as the last route
 app.use((req, res) => {
     if (req.accepts('html')) {
         res.status(404).render('error', { layout: false });
         return;
     }
     
-    // API requests
     if (req.accepts('json')) {
         res.status(404).json({ success: false, message: 'Not Found' });
         return;
@@ -63,7 +57,6 @@ app.use((req, res) => {
     res.status(404).type('txt').send('Not Found');
 });
 
-// Error handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).render('error', { 
@@ -74,7 +67,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

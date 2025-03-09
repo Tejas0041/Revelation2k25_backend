@@ -14,7 +14,6 @@ module.exports.getAllEvents = async (req, res) => {
     }
 }
 
-
 module.exports.getEventById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -27,134 +26,6 @@ module.exports.getEventById = async (req, res) => {
     }
 }
 
-const registerForEvent = async (req, res) => {
-    try {
-        const { eventId } = req.params;
-        const { teamId } = req.body;
-        const userId = req.user._id;
-
-        const event = await Event.findById(eventId);
-        if (!event) {
-            return res.status(404).json({ message: "Event not found" });
-        }
-
-        // Check if user is already registered
-        const existingRegistration = await EventRegistration.findOne({
-            event: eventId,
-            userId,
-        });
-
-        if (existingRegistration) {
-            return res.status(400).json({ message: "Already registered for this event" });
-        }
-
-        let registrationData = {
-            event: eventId,
-            userId,
-            registrationType: 'individual',
-            registeredAt: new Date()
-        };
-
-        // If team registration
-        if (teamId) {
-            const team = await Team.findById(teamId);
-            if (!team) {
-                return res.status(404).json({ message: "Team not found" });
-            }
-
-            registrationData = {
-                ...registrationData,
-                registrationType: 'team',
-                teamId
-            };
-        }
-
-        // Create event registration
-        const registration = new EventRegistration(registrationData);
-        await registration.save();
-
-        // Update user's eventsRegistered array
-        await User.findByIdAndUpdate(userId, {
-            $push: {
-                eventsRegistered: {
-                    id: eventId,
-                    team: !!teamId,
-                    teamId: teamId || null
-                }
-            }
-        });
-
-        res.status(201).json({ 
-            message: "Successfully registered for event",
-            registration 
-        });
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ message: "Error registering for event" });
-    }
-};
-
-// When creating a team
-const createTeam = async (req, res) => {
-    try {
-        const { name, eventId, members } = req.body;
-        const teamLeader = req.user._id;
-
-        // Create team
-        const team = new Team({
-            name,
-            teamLeader,
-            teamMembers: members,
-            eventId
-        });
-        await team.save();
-
-        // Register event for team leader
-        await User.findByIdAndUpdate(teamLeader, {
-            $push: {
-                eventsRegistered: {
-                    id: eventId,
-                    team: true,
-                    teamId: team._id
-                }
-            }
-        });
-
-        // Register event for team members
-        await User.updateMany(
-            { _id: { $in: members } },
-            {
-                $push: {
-                    eventsRegistered: {
-                        id: eventId,
-                        team: true,
-                        teamId: team._id
-                    }
-                }
-            }
-        );
-
-        // Create event registration for the team
-        const registration = new EventRegistration({
-            event: eventId,
-            userId: teamLeader,
-            registrationType: 'team',
-            teamId: team._id,
-            registeredAt: new Date()
-        });
-        await registration.save();
-
-        res.status(201).json({
-            message: "Team created successfully",
-            team,
-            registration
-        });
-    } catch (error) {
-        console.error('Team creation error:', error);
-        res.status(500).json({ message: "Error creating team" });
-    }
-};
-
 module.exports.registerEvent = async (req, res) => {
     try {
         const { id: eventId } = req.params;
@@ -166,7 +37,6 @@ module.exports.registerEvent = async (req, res) => {
         let teamData = null;
         let participantData = null;
 
-        // Parse JSON strings if they exist
         try {
             if (req.body.teamData) {
                 teamData = typeof req.body.teamData === 'string' 
@@ -185,7 +55,6 @@ module.exports.registerEvent = async (req, res) => {
             });
         }
 
-        // Handle payment proof upload
         let paymentProof = null;
         if (req.file) {
             const result = await new Promise((resolve, reject) => {
@@ -208,7 +77,6 @@ module.exports.registerEvent = async (req, res) => {
         }
 
         if (teamData && teamData.team) {
-            // Create team registration
             const team = new Team({
                 name: teamData.name,
                 teamLeader: teamData.teamLeader,
@@ -218,7 +86,6 @@ module.exports.registerEvent = async (req, res) => {
             });
             const savedTeam = await team.save();
 
-            // Create team event registration
             const registration = new EventRegistration({
                 event: eventId,
                 registrationType: 'team',
@@ -228,7 +95,6 @@ module.exports.registerEvent = async (req, res) => {
             });
             await registration.save();
 
-            // Update team leader's eventsRegistered
             await User.findByIdAndUpdate(teamData.teamLeader, {
                 $push: {
                     eventsRegistered: {
@@ -239,7 +105,6 @@ module.exports.registerEvent = async (req, res) => {
                 }
             });
 
-            // Update team members' eventsRegistered
             await User.updateMany(
                 { _id: { $in: teamData.teamMembers } },
                 {
@@ -254,7 +119,6 @@ module.exports.registerEvent = async (req, res) => {
             );
 
         } else if (participantData) {
-            // Create individual registration
             const registration = new EventRegistration({
                 event: eventId,
                 registrationType: 'individual',
@@ -263,18 +127,16 @@ module.exports.registerEvent = async (req, res) => {
             });
             await registration.save();
 
-            // Update user's eventsRegistered for individual registration
             await User.findByIdAndUpdate(participantData.userId, {
                 $push: {
                     eventsRegistered: {
                         id: eventId,
                         team: false,
-                        teamId: null // Explicitly set to null for individual registrations
+                        teamId: null
                     }
                 }
             });
 
-            // Update phone number if provided
             if (participantData.phoneNumber) {
                 await User.findByIdAndUpdate(participantData.userId, {
                     phoneNumber: participantData.phoneNumber
@@ -345,12 +207,11 @@ module.exports.getEventParticipants = async (req, res) => {
     }
 };
 
-exports.getRegistrationStatus = async (req, res) => {
+module.exports.getRegistrationStatus = async (req, res) => {
     try {
         const { eventId } = req.params;
         const userId = req.user._id;
 
-        // Check if event exists
         const event = await Event.findById(eventId);
         if (!event) {
             return res.status(404).json({
@@ -359,14 +220,12 @@ exports.getRegistrationStatus = async (req, res) => {
             });
         }
 
-        // Check for individual registration
         const individualReg = await EventRegistration.findOne({
             event: eventId,
             userId: userId,
             registrationType: 'individual'
         }).populate('event');
 
-        // Check for team registration - either as leader or member
         const teamReg = await EventRegistration.findOne({
             event: eventId,
             registrationType: 'team',
@@ -387,7 +246,6 @@ exports.getRegistrationStatus = async (req, res) => {
             });
         }
 
-        // Format response based on registration type
         if (individualReg) {
             return res.json({
                 success: true,
@@ -407,7 +265,6 @@ exports.getRegistrationStatus = async (req, res) => {
             });
         }
 
-        // Team registration response
         return res.json({
             success: true,
             body: {

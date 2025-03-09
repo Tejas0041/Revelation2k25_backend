@@ -30,7 +30,6 @@ module.exports.login = async (req, res) => {
         const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
         res.cookie('admin_token', token, { httpOnly: true });
         
-        // Send token in response for localStorage
         return res.json({ 
             success: true, 
             token,
@@ -44,13 +43,14 @@ module.exports.login = async (req, res) => {
     }
 };
 
-// Update dashboard stats to use EventRegistration
-module.exports.dashboard = async (req, res) => {
+exports.dashboard = async (req, res) => {
     try {
-        // Get all events with their registrations
-        const events = await Event.find();
-        
-        // Get event type counts
+        const [events, users, registrations] = await Promise.all([
+            Event.find(),
+            User.find({ type: 'normal' }),
+            EventRegistration.find().populate('event userId teamId')
+        ]);
+
         const eventTypes = {
             total: events.length,
             single: events.filter(e => e.type === 'Single').length,
@@ -58,59 +58,47 @@ module.exports.dashboard = async (req, res) => {
             combined: events.filter(e => e.type === 'Combined').length
         };
 
-        // Get user counts
-        const [totalUsers, iiestianUsers] = await Promise.all([
-            User.countDocuments({ type: 'normal' }),
-            User.countDocuments({ type: 'normal', isIIESTian: true })
-        ]);
+        const userStats = {
+            total: users.length,
+            iiestian: users.filter(u => u.isIIESTian).length,
+            nonIiestian: users.filter(u => !u.isIIESTian).length
+        };
 
-        // Get registration counts
-        const [totalRegs, individualRegs] = await Promise.all([
-            EventRegistration.countDocuments(),
-            EventRegistration.countDocuments({ registrationType: 'individual' })
-        ]);
+        const registrationStats = {
+            total: registrations.length,
+            individual: registrations.filter(r => r.registrationType === 'individual').length,
+            team: registrations.filter(r => r.registrationType === 'team').length
+        };
 
-        // Get event-wise stats
-        const eventStats = await Promise.all(events.map(async (event) => {
-            const registrations = await EventRegistration.find({ event: event._id })
-                .populate('userId teamId');
-
-            const stats = {
+        const eventStats = events.map(event => {
+            const eventRegistrations = registrations.filter(r => r.event?._id.toString() === event._id.toString());
+            
+            return {
                 name: event.name,
                 type: event.type,
                 registrations: {
-                    total: registrations.length,
-                    individual: registrations.filter(r => r.registrationType === 'individual').length,
-                    team: registrations.filter(r => r.registrationType === 'team').length,
-                    iiestian: registrations.filter(r => 
+                    total: eventRegistrations.length,
+                    individual: eventRegistrations.filter(r => r.registrationType === 'individual').length,
+                    team: eventRegistrations.filter(r => r.registrationType === 'team').length,
+                    iiestian: eventRegistrations.filter(r => 
                         (r.registrationType === 'individual' && r.userId?.isIIESTian) ||
                         (r.registrationType === 'team' && r.teamId?.teamLeader?.isIIESTian)
                     ).length,
-                    nonIiestian: registrations.filter(r => 
+                    nonIiestian: eventRegistrations.filter(r => 
                         (r.registrationType === 'individual' && !r.userId?.isIIESTian) ||
                         (r.registrationType === 'team' && !r.teamId?.teamLeader?.isIIESTian)
                     ).length
                 }
             };
-
-            return stats;
-        }));
+        }).sort((a, b) => b.registrations.total - a.registrations.total);
 
         res.render('admin/dashboard', {
             title: 'Dashboard',
             path: 'dashboard',
             stats: {
                 eventTypes,
-                users: {
-                    total: totalUsers,
-                    iiestian: iiestianUsers,
-                    nonIiestian: totalUsers - iiestianUsers
-                },
-                registrations: {
-                    total: totalRegs,
-                    individual: individualRegs,
-                    team: totalRegs - individualRegs
-                },
+                users: userStats,
+                registrations: registrationStats,
                 eventStats
             }
         });
@@ -271,7 +259,6 @@ module.exports.updateEvent = async (req, res) => {
             venue, registrationAmount 
         } = req.body;
 
-        // Update size limits logic
         const needsSizeLimits = type === 'Team' || type === 'Combined';
         const sizeLimits = needsSizeLimits ? {
             min: parseInt(teamSize.min) || 1,
@@ -290,7 +277,6 @@ module.exports.updateEvent = async (req, res) => {
             registrationAmount: parseInt(registrationAmount)
         };
 
-        // Handle new poster image if uploaded
         if (req.file) {
             const result = await new Promise((resolve, reject) => {
                 let cld_upload_stream = cloudinary.uploader.upload_stream(
@@ -338,14 +324,11 @@ module.exports.getAllUsersPage = async (req, res) => {
         const users = await User.find({ type: 'normal' }).sort({ name: 'asc' });
         
         const usersWithRegistrations = await Promise.all(users.map(async (user) => {
-            // Get both individual and team registrations for the user
             const [individualRegs, teamRegs] = await Promise.all([
-                // Individual registrations
                 EventRegistration.find({
                     userId: user._id,
                     registrationType: 'individual'
                 }).countDocuments(),
-                // Team registrations where user is either leader or member
                 Team.find({
                     $or: [
                         { teamLeader: user._id },
@@ -380,12 +363,10 @@ exports.getUserByIdPage = async (req, res) => {
     try {
         const [user, individualRegistrations, teams] = await Promise.all([
             User.findById(req.params.id),
-            // Get individual registrations
             EventRegistration.find({
                 userId: req.params.id,
                 registrationType: 'individual'
             }).populate('event'),
-            // Get teams where user is either leader or member
             Team.find({
                 $or: [
                     { teamLeader: req.params.id },
@@ -402,13 +383,11 @@ exports.getUserByIdPage = async (req, res) => {
             });
         }
 
-        // Get event registrations for all teams
         const teamRegistrations = await EventRegistration.find({
             teamId: { $in: teams.map(team => team._id) },
             registrationType: 'team'
         }).populate('event');
 
-        // Combine team data with registrations
         const teamParticipations = teams.map(team => {
             const registration = teamRegistrations.find(reg => 
                 reg.teamId.toString() === team._id.toString()
