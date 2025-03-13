@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ 
     // origin: "http://localhost:5173", 
-    origin: "https://revelation2k25-frontend-testing.vercel.app",
+    origin: ["https://revelation2k25-frontend-testing.vercel.app", "http://localhost:5173"],
     credentials: true 
 }));
 app.use(methodOverride('_method'));
