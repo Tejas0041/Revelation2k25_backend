@@ -33,7 +33,3 @@ module.exports.googleAuth = async (req, res) => {
 module.exports.status = (req, res) => {
     return res.json({ message: "Authenticated", user: req.user });
 };
-
-module.exports.logout = (req, res) => {
-    return res.json({ message: "Logged out" });
-};

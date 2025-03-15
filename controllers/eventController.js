@@ -365,19 +365,14 @@ module.exports.replyRequest= async (req, res) => {
         let { requestId, isAccepted } = req.body;
         console.log(requestId);
 
-        if (!requestId || !isAccepted) {
+        if (!requestId || (isAccepted==undefined)) {
             return res.status(400).json({
                 message: "Invalid request data"
             });
         }
 
-        // requestId= new mongoose.Types.ObjectId(requestId);
-        // console.log(requestId);
-
         const request= await Request.findOne({_id: requestId})
-        console.log(request);
-
-
+        // console.log(request);
 
         if (!request) {
             return res.status(404).json({
@@ -393,7 +388,7 @@ module.exports.replyRequest= async (req, res) => {
             });
 
             const team= await Team.findById(request.team);
-            console.log(team);
+            // console.log(team);
 
             if(team.teamLeader.equals(request.sender)){
                 await User.findByIdAndUpdate(request.receiver, {

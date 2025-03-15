@@ -9,7 +9,4 @@ router.route('/google')
 router.route('/status')
     .get(authenticateToken, authController.status);
 
-router.route('/logout')
-    .get(authController.logout);
-
 module.exports = router;
