@@ -164,16 +164,19 @@ module.exports.createEventPage = (req, res) => {
 module.exports.createEvent = async (req, res) => {
     try {
         const { 
-            name, 
-            type, 
-            teamSize, 
-            description, 
-            rules, 
-            startTime, 
-            endTime, 
-            venue, 
-            registrationAmount 
+            name, type, teamSize, description, 
+            rules, startTime, endTime, 
+            venue, registrationAmount, prizePool
         } = req.body;
+
+        if (!req.files || !req.files.poster || !req.files.backgroundImage) {
+            return res.render('admin/events/new', { 
+                error: 'Both poster and background image are required',
+                formData: req.body,
+                title: 'Create Event',
+                path: '/events'
+            });
+        }
 
         const needsSizeLimits = type === 'Team' || type === 'Combined';
         const sizeLimits = needsSizeLimits ? {
@@ -181,58 +184,56 @@ module.exports.createEvent = async (req, res) => {
             max: parseInt(teamSize.max) || 1
         } : { min: 1, max: 1 };
 
-        if (!req.file) {
-            return res.render('admin/events/new', { 
-                error: 'Event poster is required',
-                formData: req.body
+        const uploadImage = async (file) => {
+            return new Promise((resolve, reject) => {
+                let cld_upload_stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'revelation2k25/events',
+                    },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                streamifier.createReadStream(file.buffer).pipe(cld_upload_stream);
             });
-        }
+        };
 
-        return new Promise((resolve, reject) => {
-            let cld_upload_stream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'revelation2k25/events',
-                },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
-            );
+        const [posterResult, backgroundResult] = await Promise.all([
+            uploadImage(req.files.poster[0]),
+            uploadImage(req.files.backgroundImage[0])
+        ]);
 
-            streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
-        })
-        .then(async (result) => {
-            const event = new Event({
-                name,
-                type,
-                teamSize: sizeLimits,
-                description,
-                rules,
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
-                venue,
-                registrationAmount: parseInt(registrationAmount),
-                posterImage: {
-                    url: result.secure_url,
-                    filename: result.public_id
-                }
-            });
-
-            await event.save();
-            res.redirect('/admin/events');
-        })
-        .catch((error) => {
-            console.error('Error creating event:', error);
-            res.render('admin/events/new', { 
-                error: 'Error uploading image. Please try again.',
-                formData: req.body
-            });
+        const event = new Event({
+            name,
+            type,
+            teamSize: sizeLimits,
+            description,
+            rules,
+            startTime: new Date(startTime),
+            endTime: new Date(endTime),
+            venue,
+            registrationAmount: parseInt(registrationAmount),
+            prizePool: parseInt(prizePool),
+            posterImage: {
+                url: posterResult.secure_url,
+                filename: posterResult.public_id
+            },
+            backgroundImage: {
+                url: backgroundResult.secure_url,
+                filename: backgroundResult.public_id
+            }
         });
+
+        await event.save();
+        res.redirect('/admin/events');
     } catch (error) {
         console.error('Error creating event:', error);
-        res.render('admin/event/new', { 
-            error: error.message || 'Error creating event',
-            formData: req.body
+        res.render('admin/events/new', { 
+            error: 'Error creating event: ' + error.message,
+            formData: req.body,
+            title: 'Create Event',
+            path: '/events'
         });
     }
 };

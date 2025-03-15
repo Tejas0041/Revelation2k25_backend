@@ -13,10 +13,13 @@ router.get('/logout', adminController.logout);
 // Dashboard
 router.get('/dashboard', adminAuth, adminController.dashboard);
 
-// Events routes - Order matters!
+// Events routes
 router.get('/events', adminAuth, adminController.getAllEventsPage);
 router.get('/event/new', adminAuth, adminController.createEventPage);
-router.post('/event/new', adminAuth, upload.single('poster'), adminController.createEvent);
+router.post('/event/new', adminAuth, upload.fields([
+    { name: 'poster', maxCount: 1 },
+    { name: 'backgroundImage', maxCount: 1 }
+]), adminController.createEvent);
 router.get('/event/:id', adminAuth, adminController.getEventByIdPage);
 router.get('/event/edit/:id', adminAuth, adminController.getEditEventPage);
 router.post('/event/edit/:id', adminAuth, upload.single('poster'), adminController.updateEvent);

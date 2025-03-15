@@ -77,6 +77,12 @@
                 <input type="number" id="registrationAmount" name="registrationAmount" required min="0"
                     value="<%= formData ? formData.registrationAmount : '' %>">
             </div>
+
+            <div class="form-group">
+                <label for="prizePool">Prize Pool (₹):</label>
+                <input type="number" id="prizePool" name="prizePool" required min="0"
+                    value="<%= formData ? formData.prizePool : '' %>">
+            </div>
             
             <div class="form-group">
                 <label for="poster">Event Poster</label>
@@ -85,12 +91,25 @@
                         <svg viewBox="0 0 24 24">
                             <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
                         </svg>
-                        Choose Image
-                        <input type="file" id="poster" name="poster" accept="image/*" required onchange="updateFileName(this)">
+                        Choose Poster
+                        <input type="file" id="poster" name="poster" accept="image/*" required onchange="updateFileName(this, 'posterFileName')">
                     </label>
-                    <div class="file-name" id="fileName"></div>
+                    <div class="file-name" id="posterFileName"></div>
                 </div>
-                <div class="form-help">Recommended size: 1200x600 pixels</div>
+            </div>
+
+            <div class="form-group">
+                <label for="backgroundImage">Background Image</label>
+                <div class="file-input-container">
+                    <label class="file-input-label">
+                        <svg viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
+                        </svg>
+                        Choose Background
+                        <input type="file" id="backgroundImage" name="backgroundImage" accept="image/*" required onchange="updateFileName(this, 'bgFileName')">
+                    </label>
+                    <div class="file-name" id="bgFileName"></div>
+                </div>
             </div>
             
             <button type="submit">Create Event</button>
@@ -118,9 +137,9 @@
         // Add change listener
         typeSelect.addEventListener('change', updateSizeLimitsVisibility);
 
-        function updateFileName(input) {
+        function updateFileName(input, displayId) {
             const fileName = input.files[0]?.name;
-            document.getElementById('fileName').textContent = fileName || '';
+            document.getElementById(displayId).textContent = fileName || '';
         }
     </script>
 </body>

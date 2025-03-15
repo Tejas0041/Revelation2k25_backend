@@ -2,8 +2,10 @@ const Event = require('../models/eventSchema.js');
 const Team = require('../models/teamSchema.js');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
-const User = require('../models/userSchema');
-const EventRegistration = require('../models/eventRegistrationSchema');
+const User = require('../models/userSchema.js');
+const EventRegistration = require('../models/eventRegistrationSchema.js');
+const Request = require('../models/requestSchema.js');
+const mongoose= require('mongoose');
 
 module.exports.getAllEvents = async (req, res) => {
     try {
@@ -17,7 +19,7 @@ module.exports.getAllEvents = async (req, res) => {
 module.exports.getEventById = async (req, res) => {
     try {
         const { id } = req.params;
-        const event = await Event.findById(id);
+        const event = await Event.findById(id).populate('posterImage')
         if (!event) return res.status(404).json({ message: "Event not found" });
 
         return res.json({ message: "Successfully fetched event", body: event });
@@ -76,14 +78,14 @@ module.exports.registerEvent = async (req, res) => {
             };
         }
 
-        if (teamData && teamData.team) {
+        if (teamData) {
             const team = new Team({
                 name: teamData.name,
-                teamLeader: teamData.teamLeader,
-                leaderPhone: teamData.leaderPhone,
-                teamMembers: teamData.teamMembers,
-                teamSize: teamData.teamMembers.length + 1
+                teamLeader: req.user._id,
+                leaderPhone: teamData.phoneNumber,
+                teamSize: 1
             });
+
             const savedTeam = await team.save();
 
             const registration = new EventRegistration({
@@ -91,54 +93,41 @@ module.exports.registerEvent = async (req, res) => {
                 registrationType: 'team',
                 teamId: savedTeam._id,
                 paymentProof,
-                userId: teamData.teamLeader
+                userId: req.user._id
             });
             await registration.save();
 
-            await User.findByIdAndUpdate(teamData.teamLeader, {
+            await User.findByIdAndUpdate(req.user._id, {
                 $push: {
                     eventsRegistered: {
                         id: eventId,
                         team: true,
-                        teamId: savedTeam._id
+                        teamId: savedTeam._id,
                     }
                 }
             });
-
-            await User.updateMany(
-                { _id: { $in: teamData.teamMembers } },
-                {
-                    $push: {
-                        eventsRegistered: {
-                            id: eventId,
-                            team: true,
-                            teamId: savedTeam._id
-                        }
-                    }
-                }
-            );
 
         } else if (participantData) {
             const registration = new EventRegistration({
                 event: eventId,
                 registrationType: 'individual',
-                userId: participantData.userId,
+                userId: req.user._id,
                 paymentProof
             });
             await registration.save();
 
-            await User.findByIdAndUpdate(participantData.userId, {
+            await User.findByIdAndUpdate(req.user._id, {
                 $push: {
                     eventsRegistered: {
                         id: eventId,
                         team: false,
-                        teamId: null
+                        teamId: null,
                     }
                 }
             });
 
             if (participantData.phoneNumber) {
-                await User.findByIdAndUpdate(participantData.userId, {
+                await User.findByIdAndUpdate(req.user._id, {
                     phoneNumber: participantData.phoneNumber
                 });
             }
@@ -209,10 +198,18 @@ module.exports.getEventParticipants = async (req, res) => {
 
 module.exports.getRegistrationStatus = async (req, res) => {
     try {
-        const { eventId } = req.params;
-        const userId = req.user._id;
+        const { id } = req.params;  // Changed from eventId to id to match route param
+        // const userId = req.user._id;
+        console.log(req.user);
 
-        const event = await Event.findById(eventId);
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "User not authenticated"
+            });
+        }
+
+        const event = await Event.findById(id);
         if (!event) {
             return res.status(404).json({
                 success: false,
@@ -220,29 +217,28 @@ module.exports.getRegistrationStatus = async (req, res) => {
             });
         }
 
+        // Update the query to use proper conditions
         const individualReg = await EventRegistration.findOne({
-            event: eventId,
-            userId: userId,
+            event: id,
+            user: userId,  // Changed from userId to user to match schema
             registrationType: 'individual'
         }).populate('event');
 
+        // Update team registration query
         const teamReg = await EventRegistration.findOne({
-            event: eventId,
+            event: id,
             registrationType: 'team',
             $or: [
-                { 'teamId.teamLeader': userId },
-                { 'teamId.teamMembers': userId }
+                { teamLeader: userId },  // Changed the path to match your schema
+                { teamMembers: userId }
             ]
-        }).populate('teamId event');
+        }).populate('team event');  // Make sure to populate both team and event
 
+        // Return early if no registration found
         if (!individualReg && !teamReg) {
             return res.json({
                 success: true,
-                body: {
-                    isRegistered: false,
-                    registrationType: null,
-                    registration: null
-                }
+                body: null
             });
         }
 
@@ -256,7 +252,7 @@ module.exports.getRegistrationStatus = async (req, res) => {
                         _id: individualReg._id,
                         userId: individualReg.userId,
                         eventId: individualReg.event._id,
-                        paymentStatus: individualReg.paymentStatus || 'PENDING',
+                        // paymentStatus: individualReg.paymentStatus || 'PENDING',
                         paymentProof: individualReg.paymentProof || null,
                         createdAt: individualReg.createdAt,
                         updatedAt: individualReg.updatedAt
@@ -289,7 +285,144 @@ module.exports.getRegistrationStatus = async (req, res) => {
         console.error('Error checking registration status:', error);
         res.status(500).json({
             success: false,
-            message: "Error checking registration status"
+            message: "Error checking registration status",
+            error: error.message
         });
     }
 };
+
+module.exports.makeRequest = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { teamId, userId } = req.body;
+
+        if (!teamId || !userId) {
+            return res.status(400).json({
+                message: "Invalid request data"
+            });
+        }
+
+        const team = await Team.findById(teamId);
+        if (!team) {
+            return res.status(404).json({
+                message: "Team not found"
+            });
+        }
+
+        const user= await User.findById(userId);
+        if(!user){
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        const event= await Event.findById(id);
+
+        if(!event){
+            return res.status(404).json({
+                message: "Event not found"
+            });
+        }
+
+        if (team.teamMembers.length >= event.teamSize.max) {
+            return res.status(400).json({
+                message: "Team is full"
+            });
+        }
+
+        if (team.teamMembers.includes(req.user._id)) {
+            return res.status(400).json({
+                message: "You are already a member of this team"
+            });
+        }
+
+        const newRequest= new Request({
+            sender: req.user._id,
+            receiver: userId,
+            team: teamId,
+            event: id,
+            status: 'pending'
+        });
+
+        await newRequest.save();
+
+        return res.json({
+            message: "Successfully made a request",
+            body: newRequest
+        });
+    }
+    catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({
+            message: "Error making request",
+            error: error.message
+        });
+    }
+}
+
+module.exports.replyRequest= async (req, res) => { 
+    try {
+        let { requestId, isAccepted } = req.body;
+        console.log(requestId);
+
+        if (!requestId || !isAccepted) {
+            return res.status(400).json({
+                message: "Invalid request data"
+            });
+        }
+
+        // requestId= new mongoose.Types.ObjectId(requestId);
+        // console.log(requestId);
+
+        const request= await Request.findOne({_id: requestId})
+        console.log(request);
+
+
+
+        if (!request) {
+            return res.status(404).json({
+                message: "Request not found"
+            });
+        }
+
+        if (isAccepted) {
+            await Team.findByIdAndUpdate(request.team, {
+                $push: {
+                    teamMembers: request.receiver
+                }
+            });
+
+            const team= await Team.findById(request.team);
+            console.log(team);
+
+            if(team.teamLeader.equals(request.sender)){
+                await User.findByIdAndUpdate(request.receiver, {
+                    $push: {
+                        eventsRegistered: {
+                            id: request.event,
+                            team: true,
+                            teamId: request.team,
+                        }
+                    }
+                });
+            }
+            request.status= 'accepted';
+        } else {
+            request.status= 'rejected';
+        }
+
+        await request.save();
+
+        return res.json({
+            message: "Successfully replied to request",
+            body: request
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({
+            message: "Error replying to request",
+            error: error.message
+        });
+    }
+}

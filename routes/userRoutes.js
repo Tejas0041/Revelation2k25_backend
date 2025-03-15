@@ -6,6 +6,10 @@ const { authenticateToken } = require('../middleware/authenticateToken.js');
 router.route('/get-all')
     .get(authenticateToken, userController.getAllUsers);
 
-router.put('/update-profile', authenticateToken, userController.updateProfile);
+router.route('/update-profile')
+    .put(authenticateToken, userController.updateProfile);
 
+router.route('/get-requests')
+    .get(authenticateToken, userController.getRequests);
+    
 module.exports = router;

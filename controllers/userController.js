@@ -1,8 +1,20 @@
 const User = require("../models/userSchema.js");  
+const Request = require("../models/requestSchema.js");
+const Team = require("../models/teamSchema.js");
+const Event = require("../models/eventSchema.js");
 
 module.exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({ type: 'normal' });
+        const {eventId}= req.body;
+        const isIIESTian= req.user.isIIESTian;
+
+        const users = await User.find({ 
+            type: 'normal', 
+            isIIESTian: isIIESTian,
+            'eventsRegistered.id': { $ne: eventId }
+        });
+
+
         return res.json({ message: "Successfully fetched all users", body: users });
     } catch (error) {
         res.status(500).json({ message: "Error getting users", error: error.message });
@@ -67,3 +79,27 @@ exports.updateProfile = async (req, res) => {
         });
     }
 };
+module.exports.getRequests = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const requests = await Request.find({$or: [{sender: userId}, {receiver: userId}]}).populate('sender receiver event team');
+
+        const yourRequests = requests.filter(request => request.sender.equals(userId));
+        const requestsForYou = requests.filter(request => request.receiver.equals(userId));
+
+        return res.json({
+            success: true,
+            message: "Successfully fetched requests",
+            yourRequests,
+            requestsForYou
+        });
+
+    } catch (error) {
+        console.error('Get requests error:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error getting requests"
+        });
+    }
+}

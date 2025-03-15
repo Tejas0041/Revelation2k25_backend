@@ -50,7 +50,12 @@ const eventSchema= mongoose.Schema({
         type: Number,
         required: true
     },
-    posterImage: imageSchema
+    prizePool:{
+        type: Number,
+        required: true
+    },
+    posterImage: imageSchema,
+    backgroundImage: imageSchema
 });
 
 module.exports= mongoose.model('Event', eventSchema);

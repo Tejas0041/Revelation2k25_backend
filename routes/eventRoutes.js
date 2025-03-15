@@ -12,11 +12,18 @@ router.route('/:id')
     .get(eventController.getEventById);
 
 router.route('/:id/register')
-    .post(upload.single('paymentProof'), eventController.registerEvent);
+    .post(authenticateToken, upload.single('paymentProof'), eventController.registerEvent);
 
 router.route('/:id/participants')
     .get(eventController.getEventParticipants);
 
-router.get('/:eventId/registration-status', authenticateToken, eventController.getRegistrationStatus);
+router.route('/:eventId/registration-status')
+    .get(authenticateToken, eventController.getRegistrationStatus);
+
+router.route('/:id/make-request')
+    .post(authenticateToken, eventController.makeRequest);
+
+router.route('/reply-request')
+    .post(authenticateToken, eventController.replyRequest);
 
 module.exports = router;

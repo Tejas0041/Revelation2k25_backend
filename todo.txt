@@ -16,3 +16,9 @@
     - Delete event
     - Check event registrations
     - Grade a team or qualify/disqualify a team
+
+
+
+    // bg for event
+    poolPrize for event
+    
