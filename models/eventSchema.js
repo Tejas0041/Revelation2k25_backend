@@ -55,7 +55,8 @@ const eventSchema= mongoose.Schema({
         required: true
     },
     posterImage: imageSchema,
-    backgroundImage: imageSchema
+    backgroundImage: imageSchema,
+    eventGif: imageSchema  // Add new field for GIF
 });
 
 module.exports= mongoose.model('Event', eventSchema);

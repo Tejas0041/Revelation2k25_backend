@@ -20,11 +20,16 @@ router.get('/events', adminAuth, catchAsync(adminController.getAllEventsPage));
 router.get('/event/new', adminAuth, catchAsync(adminController.createEventPage));
 router.post('/event/new', adminAuth, upload.fields([
     { name: 'poster', maxCount: 1 },
-    { name: 'backgroundImage', maxCount: 1 }
+    { name: 'backgroundImage', maxCount: 1 },
+    { name: 'eventGif', maxCount: 1 }
 ]), catchAsync(adminController.createEvent));
 router.get('/event/:id', adminAuth, catchAsync(adminController.getEventByIdPage));
 router.get('/event/edit/:id', adminAuth, catchAsync(adminController.getEditEventPage));
-router.post('/event/edit/:id', adminAuth, upload.single('poster'), catchAsync(adminController.updateEvent));
+router.post('/event/edit/:id', adminAuth, upload.fields([
+    { name: 'poster', maxCount: 1 },
+    { name: 'backgroundImage', maxCount: 1 },
+    { name: 'eventGif', maxCount: 1 }
+]), catchAsync(adminController.updateEvent));
 router.get('/event/participants/:id', adminAuth, catchAsync(adminController.getEventParticipantsPage));
 
 // Rest of routes

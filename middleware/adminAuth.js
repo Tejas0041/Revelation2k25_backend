@@ -15,29 +15,30 @@ const adminAuth = async (req, res, next) => {
             return res.redirect('/admin/login');
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id);
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded.id);
 
-        if (!user || user.type !== 'admin') {
-            res.clearCookie('admin_token');
-            if (req.path === '/login') {
-                return next();
+            if (!user || user.type !== 'admin') {
+                res.clearCookie('admin_token');
+                if (req.path === '/login') {
+                    return next();
+                }
+                return res.redirect('/admin/login');
             }
+
+            if (req.path === '/login') {
+                return res.redirect('/admin/dashboard');
+            }
+
+            req.admin = user;
+            next();
+        } catch (jwtError) {
+            res.clearCookie('admin_token');
             return res.redirect('/admin/login');
         }
-
-        if (req.path === '/login') {
-            return res.redirect('/admin/dashboard');
-        }
-
-        req.admin = user;
-        next();
     } catch (error) {
-        res.clearCookie('admin_token');
-        if (req.path === '/login') {
-            return next();
-        }
-        res.redirect('/admin/login');
+        next(error);
     }
 };
 

@@ -112,8 +112,8 @@ exports.dashboard = async (req, res) => {
 };
 
 module.exports.logout = (req, res) => {
-    return res.clearCookie('admin_token');
-    return res.redirect('/admin/login');
+    res.clearCookie('admin_token');
+    res.redirect('/admin/login');
 };
 
 module.exports.createAdmin = async (req, res) => {
@@ -164,25 +164,32 @@ module.exports.createEventPage = (req, res) => {
 module.exports.createEvent = async (req, res) => {
     try {
         const { 
-            name, type, teamSize, description, 
-            rules, startTime, endTime, 
-            venue, registrationAmount, prizePool
+            name, 
+            type, 
+            teamSize, 
+            description, 
+            rules, 
+            startTime, 
+            endTime, 
+            venue, 
+            registrationAmount,
+            prizePool  // Add prizePool to destructuring
         } = req.body;
-
-        if (!req.files || !req.files.poster || !req.files.backgroundImage) {
-            return res.render('admin/events/new', { 
-                error: 'Both poster and background image are required',
-                formData: req.body,
-                title: 'Create Event',
-                path: '/events'
-            });
-        }
 
         const needsSizeLimits = type === 'Team' || type === 'Combined';
         const sizeLimits = needsSizeLimits ? {
             min: parseInt(teamSize.min) || 1,
             max: parseInt(teamSize.max) || 1
         } : { min: 1, max: 1 };
+
+        if (!req.files || !req.files.poster || !req.files.backgroundImage) {
+            return res.render('admin/events/new', { 
+                error: 'Poster and background image are required',
+                formData: req.body,
+                title: 'Create Event',
+                path: '/events'
+            });
+        }
 
         const uploadImage = async (file) => {
             return new Promise((resolve, reject) => {
@@ -199,12 +206,14 @@ module.exports.createEvent = async (req, res) => {
             });
         };
 
-        const [posterResult, backgroundResult] = await Promise.all([
+        // Upload all images
+        const [posterResult, backgroundResult, gifResult] = await Promise.all([
             uploadImage(req.files.poster[0]),
-            uploadImage(req.files.backgroundImage[0])
+            uploadImage(req.files.backgroundImage[0]),
+            req.files.eventGif ? uploadImage(req.files.eventGif[0]) : null
         ]);
 
-        const event = new Event({
+        const eventData = {
             name,
             type,
             teamSize: sizeLimits,
@@ -214,7 +223,7 @@ module.exports.createEvent = async (req, res) => {
             endTime: new Date(endTime),
             venue,
             registrationAmount: parseInt(registrationAmount),
-            prizePool: parseInt(prizePool),
+            prizePool: parseInt(prizePool), // Add prizePool
             posterImage: {
                 url: posterResult.secure_url,
                 filename: posterResult.public_id
@@ -223,17 +232,24 @@ module.exports.createEvent = async (req, res) => {
                 url: backgroundResult.secure_url,
                 filename: backgroundResult.public_id
             }
-        });
+        };
 
+        // Add GIF if uploaded
+        if (gifResult) {
+            eventData.eventGif = {
+                url: gifResult.secure_url,
+                filename: gifResult.public_id
+            };
+        }
+
+        const event = new Event(eventData);
         await event.save();
         res.redirect('/admin/events');
     } catch (error) {
         console.error('Error creating event:', error);
         res.render('admin/events/new', { 
-            error: 'Error creating event: ' + error.message,
-            formData: req.body,
-            title: 'Create Event',
-            path: '/events'
+            error: 'Error uploading image. Please try again.',
+            formData: req.body
         });
     }
 };
@@ -257,7 +273,7 @@ module.exports.updateEvent = async (req, res) => {
         const { 
             name, type, teamSize, description, 
             rules, startTime, endTime, 
-            venue, registrationAmount 
+            venue, registrationAmount, prizePool 
         } = req.body;
 
         const needsSizeLimits = type === 'Team' || type === 'Combined';
@@ -275,27 +291,64 @@ module.exports.updateEvent = async (req, res) => {
             startTime: new Date(startTime),
             endTime: new Date(endTime),
             venue,
-            registrationAmount: parseInt(registrationAmount)
+            registrationAmount: parseInt(registrationAmount),
+            prizePool: parseInt(prizePool)
         };
 
-        if (req.file) {
-            const result = await new Promise((resolve, reject) => {
+        const uploadImage = async (file) => {
+            return new Promise((resolve, reject) => {
                 let cld_upload_stream = cloudinary.uploader.upload_stream(
-                    {
-                        folder: 'revelation2k25/events',
-                    },
+                    { folder: 'revelation2k25/events' },
                     (error, result) => {
                         if (error) reject(error);
                         else resolve(result);
                     }
                 );
-                streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
+                streamifier.createReadStream(file.buffer).pipe(cld_upload_stream);
             });
+        };
 
-            updateData.posterImage = {
-                url: result.secure_url,
-                filename: result.public_id
-            };
+        // Handle image uploads if provided
+        if (req.files) {
+            const uploadPromises = [];
+            
+            if (req.files.poster) {
+                uploadPromises.push(
+                    uploadImage(req.files.poster[0])
+                        .then(result => {
+                            updateData.posterImage = {
+                                url: result.secure_url,
+                                filename: result.public_id
+                            };
+                        })
+                );
+            }
+
+            if (req.files.backgroundImage) {
+                uploadPromises.push(
+                    uploadImage(req.files.backgroundImage[0])
+                        .then(result => {
+                            updateData.backgroundImage = {
+                                url: result.secure_url,
+                                filename: result.public_id
+                            };
+                        })
+                );
+            }
+
+            if (req.files.eventGif) {
+                uploadPromises.push(
+                    uploadImage(req.files.eventGif[0])
+                        .then(result => {
+                            updateData.eventGif = {
+                                url: result.secure_url,
+                                filename: result.public_id
+                            };
+                        })
+                );
+            }
+
+            await Promise.all(uploadPromises);
         }
 
         const event = await Event.findByIdAndUpdate(
@@ -305,19 +358,21 @@ module.exports.updateEvent = async (req, res) => {
         );
 
         if (!event) {
-            return res.status(404).send('Event not found');
+            return res.status(404).render('error', {
+                message: 'Event not found',
+                error: {}
+            });
         }
 
         res.redirect(`/admin/event/${event._id}`);
     } catch (error) {
         console.error('Error updating event:', error);
-        return res.render('admin/event/edit', { 
+        return res.render('admin/events/edit', { 
             event: { ...req.body, _id: req.params.id }, 
             error: error.message 
         });
     }
 };
-
 
 
 module.exports.getAllUsersPage = async (req, res) => {
