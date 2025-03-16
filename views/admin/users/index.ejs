@@ -94,7 +94,8 @@
                             <tr>
                                 <td>
                                     <div class="user-info">
-                                        <img src="<%= user.picture %>" alt="<%= user.name %>" class="user-avatar">
+                                        <img src="<%= user.picture %>" 
+                                        onerror="this.onerror=null; this.src='https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?'+new Date().getTime();"  class="user-avatar">
                                         <div class="user-name-type">
                                             <span class="user-name"><%= user.name %></span>
                                             <span class="user-type-indicator <%= user.isIIESTian ? 'iiestian' : 'non-iiestian' %>">
