@@ -112,8 +112,8 @@ exports.dashboard = async (req, res) => {
 };
 
 module.exports.logout = (req, res) => {
-    res.clearCookie('admin_token');
-    res.redirect('/admin/login');
+    return res.clearCookie('admin_token');
+    return res.redirect('/admin/login');
 };
 
 module.exports.createAdmin = async (req, res) => {

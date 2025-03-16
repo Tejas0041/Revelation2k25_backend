@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { authenticateToken } = require('../middleware/authenticateToken.js');
+const catchAsync= require("../utils/catchAsync.js");
 
 router.route('/get-all')
-    .get(authenticateToken, userController.getAllUsers);
+    .get(authenticateToken, catchAsync(userController.getAllUsers));
 
 router.route('/update-profile')
-    .put(authenticateToken, userController.updateProfile);
+    .put(authenticateToken, catchAsync(userController.updateProfile));
 
 router.route('/get-requests')
-    .get(authenticateToken, userController.getRequests);
+    .get(authenticateToken, catchAsync(userController.getRequests));
     
 module.exports = router;
