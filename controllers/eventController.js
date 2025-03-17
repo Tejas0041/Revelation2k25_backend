@@ -48,10 +48,25 @@ module.exports.getAllEvents = async (req, res) => {
 module.exports.getEventById = async (req, res) => {
     try {
         const { id } = req.params;
-        const event = await Event.findById(id).populate('posterImage')
+        let event = await Event.findById(id).populate('posterImage').lean()
+        const startTimeDate = new Date(event.startTime);
+        const dateString = startTimeDate.toISOString().split('T')[0];
+        
+        let day = 1;
+        switch(dateString) {
+            case '2025-03-22':
+                day = 2;
+                break;
+            case '2025-03-23':
+                day = 3;
+                break;
+            default:
+                day = 1;
+        }
+        
         if (!event) return res.status(404).json({ message: "Event not found" });
-
-        return res.json({ message: "Successfully fetched event", body: event });
+        event= {...event, day};
+        return res.json({ message: "Successfully fetched event", body:  event});
     } catch (error) {
         res.status(500).json({ message: "Error getting event", error: error.message });
     }
