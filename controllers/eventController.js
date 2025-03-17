@@ -9,10 +9,39 @@ const mongoose= require('mongoose');
 
 module.exports.getAllEvents = async (req, res) => {
     try {
-        const events = await Event.find();
-        return res.json({ message: "Successfully fetched all events", body: events });
+        const events = await Event.find().lean();
+
+        const eventsWithDay = events.map(event => {
+            const startTimeDate = new Date(event.startTime);
+            const dateString = startTimeDate.toISOString().split('T')[0];
+            
+            let day = 1;
+            switch(dateString) {
+                case '2025-03-22':
+                    day = 2;
+                    break;
+                case '2025-03-23':
+                    day = 3;
+                    break;
+                default:
+                    day = 1;
+            }
+            
+            return {
+                ...event,
+                day
+            };
+        });
+            
+        return res.json({ 
+            message: "Successfully fetched all events", 
+            body: eventsWithDay 
+        });
     } catch (error) {
-        res.status(500).json({ message: "Error getting events", error: error.message });
+        res.status(500).json({ 
+            message: "Error getting events", 
+            error: error.message 
+        });
     }
 }
 

@@ -188,24 +188,6 @@ module.exports.createEvent = async (req, res) => {
             });
         }
 
-        const day1= new Date('2025-03-21T00:00:00.000+00:00');
-        const startTimeDate = new Date(startTime);
-        let day = 1;
-        
-        // Get date in YYYY-MM-DD format for comparison
-        const dateString = startTimeDate.toISOString().split('T')[0];
-        
-        switch(dateString) {
-            case '2025-03-22':
-                day = 2;
-                break;
-            case '2025-03-23':
-                day = 3;
-                break;
-            default:
-                day = 1;
-        }
-        
         console.log('Event Day:', day);
         // return res.json({message: "Success"});
 
@@ -237,7 +219,6 @@ module.exports.createEvent = async (req, res) => {
                     url: result.secure_url,
                     filename: result.public_id
                 },
-                day
             });
 
             await event.save();
