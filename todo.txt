@@ -21,4 +21,39 @@
 
     // bg for event
     poolPrize for event
-    
+
+~~ Changes ~~
+
+# Event Data
+
+* name
+* type(single/team)
+* teamSize(min, max)
+* description
+* rules
+* coordinator name, phoneNo
+* startTime, endTime
+* venue
+* registrationAmount (for non-iiestian)
+* prizePool
+* posterImage
+* backgroundImage
+* eventGif
+
+* send day (1, 2, 3) with event data
+
+* registration needed from website? ('yes', 'external', 'notReq')
+* if true :
+    - any submission option should be there?
+    - submissionDetail field ('not started', 'live', 'ended')
+    - only leader can make submission
+    - after submission, other team members can view it(other teams/participants can't)
+* if false : 
+    - the 'register via dashboard' must be changed to 'register' and that button must redirect to registration link
+
+
+* for this.. team schema and user schema has to be changed
+
+# Payment SS for non-iiestian
+
+* If registrationAmount===0, then upload option must not be there

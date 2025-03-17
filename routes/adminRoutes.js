@@ -39,4 +39,6 @@ router.get('/teams', adminAuth, catchAsync(adminController.getAllTeamsPage));
 router.get('/teams/:id', adminAuth, catchAsync(adminController.getTeamByIdPage));
 router.get('/registrations', adminAuth, catchAsync(adminController.getAllRegistrationsPage));
 
+// router.post('/create-admin', adminController.createAdmin);
+
 module.exports = router;
