@@ -207,7 +207,7 @@ module.exports.createEvent = async (req, res) => {
         }
         
         console.log('Event Day:', day);
-        return res.json({message: "Success"});
+        // return res.json({message: "Success"});
 
         return new Promise((resolve, reject) => {
             let cld_upload_stream = cloudinary.uploader.upload_stream(
