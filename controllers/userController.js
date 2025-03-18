@@ -5,13 +5,13 @@ const Event = require("../models/eventSchema.js");
 
 module.exports.getAllUsers = async (req, res) => {
     try {
-        const {eventId}= req.body;
+        const {id}= req.params;
         const isIIESTian= req.user.isIIESTian;
 
         const users = await User.find({ 
             type: 'normal', 
             isIIESTian: isIIESTian,
-            'eventsRegistered.id': { $ne: eventId }
+            'eventsRegistered.id': { $ne: id }
         });
 
 

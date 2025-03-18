@@ -31,9 +31,12 @@ const eventSchema= mongoose.Schema({
         type: String,
         required: true
     },
-    rules:{
+    // rules:{
+    //     type: String
+    // },
+    rules:[{
         type: String
-    },
+    }],
     startTime:{
         type: Date,
         required: true

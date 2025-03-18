@@ -49,8 +49,16 @@
             </div>
 
             <div class="form-group">
-                <label for="rules">Rules:</label>
-                <textarea id="rules" name="rules" rows="4"><%= event.rules %></textarea>
+                <label>Rules:</label>
+                <div id="rulesContainer">
+                    <% event.rules.forEach((rule, index) => { %>
+                        <div class="rule-input-group">
+                            <textarea name="rules[]" class="form-control" rows="2" required><%= rule %></textarea>
+                            <button type="button" class="remove-rule btn btn-danger" <%= event.rules.length === 1 ? 'style="display: none;"' : '' %>>Remove</button>
+                        </div>
+                    <% }); %>
+                </div>
+                <button type="button" class="btn btn-secondary mt-2" onclick="addRule()">Add Another Rule</button>
             </div>
             
             <div class="form-group">
@@ -174,6 +182,31 @@
             const fileNameElement = document.getElementById(fileNameElementId);
             fileNameElement.textContent = input.files.length > 0 ? input.files[0].name : '';
         }
+
+        function addRule() {
+            const rulesContainer = document.getElementById('rulesContainer');
+            const ruleInputGroup = document.createElement('div');
+            ruleInputGroup.className = 'rule-input-group';
+            ruleInputGroup.innerHTML = `
+                <textarea name="rules[]" class="form-control" rows="2" required></textarea>
+                <button type="button" class="remove-rule btn btn-danger">Remove</button>
+            `;
+            rulesContainer.appendChild(ruleInputGroup);
+            updateRemoveButtons();
+        }
+
+        function updateRemoveButtons() {
+            const removeButtons = document.querySelectorAll('.remove-rule');
+            removeButtons.forEach(button => {
+                button.style.display = removeButtons.length === 1 ? 'none' : 'inline-block';
+                button.addEventListener('click', () => {
+                    button.parentElement.remove();
+                    updateRemoveButtons();
+                });
+            });
+        }
+
+        updateRemoveButtons();
     </script>
 
     <style>
@@ -197,6 +230,21 @@
         .current-image span {
             color: #64748b;
             font-size: 0.875rem;
+        }
+
+        .rule-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .rule-input-group .form-control {
+            flex: 1;
+        }
+
+        .rule-input-group .btn {
+            flex-shrink: 0;
         }
     </style>
 </body>

@@ -50,8 +50,14 @@
             </div>
 
             <div class="form-group">
-                <label for="rules">Rules:</label>
-                <textarea id="rules" name="rules" rows="4"><%= formData ? formData.rules : '' %></textarea>
+                <label>Rules:</label>
+                <div id="rulesContainer">
+                    <div class="rule-input-group">
+                        <textarea name="rules[]" class="form-control" rows="2" placeholder="Enter rule" required></textarea>
+                        <button type="button" class="remove-rule btn btn-danger" style="display: none;">Remove</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary mt-2" onclick="addRule()">Add Another Rule</button>
             </div>
             
             <div class="form-group">
@@ -155,6 +161,57 @@
             const fileName = input.files[0]?.name;
             document.getElementById(displayId).textContent = fileName || '';
         }
+
+        function addRule() {
+            const container = document.getElementById('rulesContainer');
+            const newRule = document.createElement('div');
+            newRule.className = 'rule-input-group';
+            newRule.innerHTML = `
+                <textarea name="rules[]" class="form-control" rows="2" placeholder="Enter rule" required></textarea>
+                <button type="button" class="remove-rule btn btn-danger">Remove</button>
+            `;
+            container.appendChild(newRule);
+            updateRemoveButtons();
+        }
+
+        function updateRemoveButtons() {
+            const removeButtons = document.querySelectorAll('.remove-rule');
+            const rules = document.querySelectorAll('.rule-input-group');
+            
+            removeButtons.forEach((button, index) => {
+                if (rules.length > 1) {
+                    button.style.display = 'block';
+                    button.onclick = function() {
+                        rules[index].remove();
+                        updateRemoveButtons();
+                    };
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+        }
     </script>
+
+    <style>
+        .rule-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: flex-start;
+        }
+
+        .rule-input-group textarea {
+            flex: 1;
+        }
+
+        .remove-rule {
+            padding: 5px 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
 </body>
 </html>

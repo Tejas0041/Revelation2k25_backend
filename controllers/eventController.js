@@ -122,6 +122,12 @@ module.exports.registerEvent = async (req, res) => {
             };
         }
 
+        if((event.registrationAmount!==0) && (!req.user.isIIESTian) && !paymentProof){
+            return res.status(400).json({ 
+                message: "Payment proof is required" 
+            });
+        }
+
         if (teamData) {
             const team = new Team({
                 name: teamData.name,

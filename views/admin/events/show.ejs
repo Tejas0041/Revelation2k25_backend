@@ -63,7 +63,7 @@
                             </span>
                         </div>
                         <div>
-                            <a href="/admin/event/<%= event._id %>/edit" class="btn btn-outline-primary me-2">Edit Event</a>
+                            <a href="/admin/event/edit/<%= event._id %>" class="btn btn-outline-primary me-2">Edit Event</a>
                             <a href="/admin/events/<%= event._id %>/participants" class="btn btn-primary">View Participants</a>
                         </div>
                     </div>
@@ -141,15 +141,14 @@
                     <% } %>
 
                     <!-- Rules -->
-                    <div>
-                        <h5 class="border-bottom pb-2">Rules & Guidelines</h5>
+                    <div class="content-section">
+                        <h3>Rules & Guidelines</h3>
                         <div class="rules-list">
-                            <% event.rules.split('\n').forEach(rule => { %>
-                                <% if (rule.trim()) { %>
-                                    <div class="rule-item">
-                                        <%= rule.trim() %>
-                                    </div>
-                                <% } %>
+                            <% event.rules.forEach((rule, index) => { %>
+                                <div class="rule-item">
+                                    <span class="rule-number"><%= index + 1 %>.</span>
+                                    <span class="rule-text"><%= rule %></span>
+                                </div>
                             <% }); %>
                         </div>
                     </div>
@@ -219,10 +218,22 @@
         }
 
         .rule-item {
+            display: flex;
+            gap: 12px;
             padding: 12px 16px;
             background: #f8fafc;
             border-radius: 8px;
             color: #475569;
+        }
+
+        .rule-number {
+            color: #3b82f6;
+            font-weight: 600;
+            min-width: 24px;
+        }
+
+        .rule-text {
+            flex: 1;
             line-height: 1.5;
         }
 
