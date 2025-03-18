@@ -5,7 +5,7 @@ const { authenticateToken } = require('../middleware/authenticateToken.js');
 const catchAsync= require("../utils/catchAsync.js");
 
 router.route('/:id/get-all')
-    .get(authenticateToken, catchAsync(userController.getAllUsers));
+    .get(catchAsync(userController.getAllUsers));
 
 router.route('/update-profile')
     .put(authenticateToken, catchAsync(userController.updateProfile));
