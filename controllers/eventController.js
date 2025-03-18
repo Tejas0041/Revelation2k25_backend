@@ -481,6 +481,7 @@ module.exports.replyRequest= async (req, res) => {
                     }
                 }
             });
+            request.status= 'accepted';
         } else {
             request.status= 'rejected';
         }
