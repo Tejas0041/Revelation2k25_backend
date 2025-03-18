@@ -5,7 +5,6 @@ const streamifier = require('streamifier');
 const User = require('../models/userSchema.js');
 const EventRegistration = require('../models/eventRegistrationSchema.js');
 const Request = require('../models/requestSchema.js');
-const mongoose= require('mongoose');
 const jwt = require("jsonwebtoken");
 
 module.exports.getAllEvents = async (req, res) => {
@@ -227,6 +226,23 @@ module.exports.getEventParticipants = async (req, res) => {
             })
             .populate('userId', 'name email picture isIIESTian');
 
+        const teamsIds = registrations
+        .filter(reg => reg.registrationType === 'team')
+        .map(reg => reg.teamId._id);
+        
+        const allPendingRequests = await Request.find({
+            team: { $in: teamsIds },
+            status: 'pending'
+        }).populate('sender receiver team event');
+
+        console.log(allPendingRequests);
+
+        const pendingRequestsCount = new Map();
+        allPendingRequests.forEach(request => {
+            const count = request.team.teamMembers.length;
+            pendingRequestsCount.set(request.team.name, count + 1);
+        });
+
         const participants = {
             teams: {
                 others: registrations
@@ -244,7 +260,9 @@ module.exports.getEventParticipants = async (req, res) => {
                         registrationId: reg._id,
                         registeredAt: reg.registeredAt,
                         paymentProof: reg.paymentProof,
-                        status: reg.status
+                        status: reg.status,
+                        sizeWithPending: reg.teamId.teamMembers.length + 1 + 
+                              (pendingRequestsCount.get(reg.teamId.name) || 0)
                     })),
                 you: currentUser ? registrations
                     .filter(reg => 
@@ -256,7 +274,15 @@ module.exports.getEventParticipants = async (req, res) => {
                             event.teamId && 
                             event.teamId._id.equals(reg.teamId._id)
                         )
-                    ) : []
+                    ).map(reg => ({
+                        ...reg.teamId.toObject(),
+                        registrationId: reg._id,
+                        registeredAt: reg.registeredAt,
+                        paymentProof: reg.paymentProof,
+                        status: reg.status,
+                        sizeWithPending: reg.teamId.teamMembers.length + 1 + 
+                        (pendingRequestsCount.get(reg.teamId.name) || 0)
+                    })) : []
             },
             individuals: registrations
                 .filter(reg => reg.registrationType === 'individual')
