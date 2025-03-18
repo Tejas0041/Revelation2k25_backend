@@ -6,6 +6,7 @@ const User = require('../models/userSchema.js');
 const EventRegistration = require('../models/eventRegistrationSchema.js');
 const Request = require('../models/requestSchema.js');
 const mongoose= require('mongoose');
+const jwt = require("jsonwebtoken");
 
 module.exports.getAllEvents = async (req, res) => {
     try {
@@ -198,10 +199,22 @@ module.exports.registerEvent = async (req, res) => {
         });
     }
 };
-
 module.exports.getEventParticipants = async (req, res) => {
     try {
         const { id: eventId } = req.params;
+
+        let currentUser = null;
+        const token = req.headers.authorization?.split(" ")[1];
+        
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                currentUser = await User.findById(decoded.id)
+                    .populate('eventsRegistered.id eventsRegistered.teamId');
+            } catch (err) {
+                console.log('Token verification failed:', err.message);
+            }
+        }
 
         const registrations = await EventRegistration.find({ event: eventId })
             .populate('event')
@@ -215,15 +228,38 @@ module.exports.getEventParticipants = async (req, res) => {
             .populate('userId', 'name email picture isIIESTian');
 
         const participants = {
-            teams: registrations.filter(reg => reg.registrationType === 'team')
-                .map(reg => ({
-                    ...reg.teamId.toObject(),
-                    registrationId: reg._id,
-                    registeredAt: reg.registeredAt,
-                    paymentProof: reg.paymentProof,
-                    status: reg.status
-                })),
-            individuals: registrations.filter(reg => reg.registrationType === 'individual')
+            teams: {
+                others: registrations
+                    .filter(reg => reg.registrationType === 'team')
+                    .filter(reg => {
+                        if (!currentUser) return true;
+                        const userEvent = currentUser.eventsRegistered.find(
+                            event => event.id && event.id.equals(eventId)
+                        );
+                        return !(userEvent && userEvent.team && userEvent.teamId && 
+                               userEvent.teamId._id.equals(reg.teamId._id));
+                    })
+                    .map(reg => ({
+                        ...reg.teamId.toObject(),
+                        registrationId: reg._id,
+                        registeredAt: reg.registeredAt,
+                        paymentProof: reg.paymentProof,
+                        status: reg.status
+                    })),
+                you: currentUser ? registrations
+                    .filter(reg => 
+                        reg.registrationType === 'team' && 
+                        currentUser.eventsRegistered.some(event => 
+                            event.id && 
+                            event.id.equals(eventId) && 
+                            event.team && 
+                            event.teamId && 
+                            event.teamId._id.equals(reg.teamId._id)
+                        )
+                    ) : []
+            },
+            individuals: registrations
+                .filter(reg => reg.registrationType === 'individual')
                 .map(reg => ({
                     ...reg.userId.toObject(),
                     registrationId: reg._id,
@@ -245,7 +281,6 @@ module.exports.getEventParticipants = async (req, res) => {
         });
     }
 };
-
 module.exports.getRegistrationStatus = async (req, res) => {
     try {
         const { id } = req.params;  // Changed from eventId to id to match route param
@@ -431,27 +466,21 @@ module.exports.replyRequest= async (req, res) => {
         }
 
         if (isAccepted) {
+            const team= await Team.findById(request.team);
             await Team.findByIdAndUpdate(request.team, {
                 $push: {
-                    teamMembers: request.receiver
+                    teamMembers: team.teamLeader.equals(request.receiver)?request.sender:request.receiver 
                 }
             });
-
-            const team= await Team.findById(request.team);
-            // console.log(team);
-
-            if(team.teamLeader.equals(request.sender)){
-                await User.findByIdAndUpdate(request.receiver, {
-                    $push: {
-                        eventsRegistered: {
-                            id: request.event,
-                            team: true,
-                            teamId: request.team,
-                        }
+            await User.findByIdAndUpdate(team.teamLeader.equals(request.receiver)?request.sender:request.receiver, {
+                $push: {
+                    eventsRegistered: {
+                        id: request.event,
+                        team: true,
+                        teamId: request.team,
                     }
-                });
-            }
-            request.status= 'accepted';
+                }
+            });
         } else {
             request.status= 'rejected';
         }

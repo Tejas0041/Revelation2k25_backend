@@ -31,5 +31,5 @@ module.exports.googleAuth = async (req, res) => {
 };
 
 module.exports.status = (req, res) => {
-    return res.json({ message: "Authenticated", user: req.user });
+    return res.status(200).json({ message: "Authenticated", user: req.user });
 };
