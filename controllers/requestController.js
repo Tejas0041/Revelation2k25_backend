@@ -1,14 +1,22 @@
 const Request= require("../models/requestSchema.js");
+const Team= require("../models/teamSchema.js");
 
 module.exports.getPendingRequests= async (req, res)=> {
     try {
         const { id }= req.params;
+
+        const team= await Team.findById(id);
+
+        if(!team){
+            return res.status(400).json({message: "Team not found"})
+        }
+
         const requests= await Request.find({
             team: id,
             status: 'pending'
         });
 
-        return res.json({ message: "Successfully fetched all pending requests", body: requests });
+        return res.json({ message: "Successfully fetched all pending requests", body: {requests, team} });
     } catch (error) {
         res.status(500).json({ message: "Error getting pending requests", error: error.message });
     }
