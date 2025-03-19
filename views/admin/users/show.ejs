@@ -63,9 +63,6 @@
                             <div class="event-item">
                                 <div class="event-number">#<%= index + 1 %></div>
                                 <div class="event-info">
-                                    <a href="/admin/event/<%= reg.event._id %>" class="event-name">
-                                        <%= reg.event.name %>
-                                    </a>
                                     <div class="registration-meta">
                                         <span class="registration-time">
                                             <i class="far fa-clock"></i>
@@ -78,6 +75,7 @@
                                                 year: 'numeric'
                                             }) %>
                                         </span>
+                                        <span><%= reg.event.name %></span>
                                         <% if (reg.team) { %>
                                             <span class="type-badge team">Team</span>
                                             <a href="/admin/teams/<%= reg.team._id %>" class="team-name">

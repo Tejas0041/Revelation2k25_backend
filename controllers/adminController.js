@@ -9,7 +9,7 @@ const streamifier = require('streamifier');
 
 
 module.exports.loginPage = (req, res) => {
-    res.render('admin/login', { 
+    return res.render('admin/login', { 
         error: null,
         path: 'login'
     });
@@ -427,6 +427,8 @@ exports.getUserByIdPage = async (req, res) => {
               .populate('teamMembers', 'name email')
         ]);
 
+        // console.log(individualRegistrations)
+
         if (!user) {
             return res.status(404).render('error', {
                 message: 'User not found',
@@ -434,8 +436,39 @@ exports.getUserByIdPage = async (req, res) => {
             });
         }
 
+        // const teamRegistrations = await EventRegistration.find({
+        //     teamId: { $in: teams.map(team => team._id) },
+        //     registrationType: 'team'
+        // }).populate('event');
+
+        // console.log(teamRegistrations)
+
+        // const teamParticipations = teams.map(team => {
+        //     const registration = teamRegistrations.find(reg => 
+        //         reg.teamId.toString() === team._id.toString()
+        //     );
+        //     return {
+        //         team: team,
+        //         event: registration?.event,
+        //         registeredAt: registration?.registeredAt,
+        //         isLeader: team.teamLeader._id.toString() === user._id.toString()
+        //     };
+        // });
+
+        // // console.log({individualRegistrations, teamParticipations});
+        // res.render('admin/users/show', {
+        //     user,
+        //     registrations: {
+        //         individual: individualRegistrations,
+        //         team: teamParticipations
+        //     },
+        //     title: user.name,
+        //     path: '/users'
+        // });
+        const teamIds = teams.map(team => team._id);
+
         const teamRegistrations = await EventRegistration.find({
-            teamId: { $in: teams.map(team => team._id) },
+            teamId: { $in: teamIds },
             registrationType: 'team'
         }).populate('event');
 
@@ -444,14 +477,14 @@ exports.getUserByIdPage = async (req, res) => {
                 reg.teamId.toString() === team._id.toString()
             );
             return {
-                team: team,
-                event: registration?.event,
-                registeredAt: registration?.registeredAt,
-                isLeader: team.teamLeader._id.toString() === user._id.toString()
+                team,
+                event: registration?.event || null,
+                registeredAt: registration?.registeredAt || null,
+                isLeader: team.teamLeader?._id.toString() === user._id.toString()
             };
         });
 
-        res.render('admin/users/show', {
+        return res.render('admin/users/show', {
             user,
             registrations: {
                 individual: individualRegistrations,
@@ -625,7 +658,7 @@ module.exports.getAllRegistrationsPage = async (req, res) => {
             })
             .sort({ registeredAt: -1 });
 
-        res.render('admin/registrations', {
+        return res.render('admin/registrations', {
             registrations,
             title: 'All Registrations',
             path: 'registrations',
@@ -665,30 +698,12 @@ module.exports.getEventParticipantsPage = async (req, res) => {
                     }
                 }
             }).select('name email phoneNumber isIIESTian picture');
-
         } else {
-            // For team events, find teams whose members have this event registered
-            const teams = await Team.find({
-                'teamMembers.0': { $exists: true } // Only get teams with at least one member
-            }).populate([
-                { 
-                    path: 'teamLeader',
-                    select: 'name email phoneNumber isIIESTian picture'
-                },
-                {
-                    path: 'teamMembers',
-                    select: 'name email phoneNumber isIIESTian picture'
-                }
-            ]);
-
-            participants = teams.filter(team => {
-                return team.teamLeader.eventsRegistered?.some(event => 
-                    event.id.toString() === eventId && event.team === true
-                );
-            });
+            const allRegs= await EventRegistration.find({event: eventId}).populate('teamId');
+            participants = allRegs;
         }
 
-        res.render('admin/events/participants', {
+        return res.render('admin/events/participants', {
             event,
             participants,
             title: `${event.name} - Participants`,
@@ -717,6 +732,55 @@ module.exports.toggleIsLive= async(req, res)=>{
         event.save();
         return res.redirect(`/admin/event/${id}`);
     }catch(error){
-        return res.status(500).json({message: "Failed to toggler"})
+        return res.status(500).json({message: "Failed to toggle"})
+    }
+}
+
+module.exports.deleteEventRegistration= async(req, res)=>{
+    try{
+        const {id}= req.params;
+        const eventRegistration= await EventRegistration.findById(id);
+
+        if(!eventRegistration){
+            return res.status(404).json({message: "Event Registration not found"});
+        }
+
+        if(eventRegistration.type==='team'){
+            const team= await Team.findById(eventRegistration.teamId)
+            console.log(team);
+            return res.send(team);
+            const allTeamMembers = [team.teamLeader, ...team.teamMembers];
+            await User.updateMany(
+                { _id: { $in: allTeamMembers } },
+                { 
+                    $pull: { 
+                        eventsRegistered: { 
+                            team: true, 
+                            teamId: team._id 
+                        } 
+                    } 
+                }
+            );
+            await Request.deleteMany({ team: team._id });
+            await Team.findByIdAndDelete(team._id);
+            await EventRegistration.deleteMany({ teamId: eventRegistration.teamId });
+        }else{
+            await User.updateMany(
+                { _id: eventRegistration.userId },
+                { 
+                    $pull: { 
+                        eventsRegistered: { 
+                            team: false, 
+                            id: eventRegistration.event
+                        } 
+                    } 
+                }
+            );
+            await EventRegistration.findByIdAndDelete(id);
+        }
+
+        return res.redirect('/admin/registrations');
+    }catch(error){
+        return res.status(500).json({message: "Failed to delete registration"})
     }
 }

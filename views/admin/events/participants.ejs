@@ -50,50 +50,18 @@
                 <% } else { %>
                     <!-- Team Event Participants -->
                     <div class="teams-list">
-                        <% participants.forEach(team => { %>
-                            <div class="team-card card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Team: <%= team.name %></h5>
-                                </div>
-                                <div class="card-body">
-                                    <!-- Team Leader -->
-                                    <div class="mb-3">
-                                        <h6 class="text-muted">Team Leader</h6>
-                                        <div class="d-flex align-items-center">
-                                            <img src="<%= team.teamLeader.picture %>" alt="" class="rounded-circle me-2" style="width: 32px; height: 32px;">
-                                            <div>
-                                                <div><%= team.teamLeader.name %></div>
-                                                <small class="text-muted"><%= team.teamLeader.email %></small>
-                                            </div>
-                                            <div class="ms-auto">
-                                                <span class="badge <%= team.teamLeader.isIIESTian ? 'bg-success' : 'bg-primary' %>">
-                                                    <%= team.teamLeader.isIIESTian ? 'IIESTian' : 'Non-IIESTian' %>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Team Members -->
-                                    <h6 class="text-muted">Team Members</h6>
-                                    <div class="list-group">
-                                        <% team.teamMembers.forEach(member => { %>
-                                            <div class="list-group-item">
-                                                <div class="d-flex align-items-center">
-                                                    <img src="<%= member.picture %>" alt="" class="rounded-circle me-2" style="width: 32px; height: 32px;">
-                                                    <div>
-                                                        <div><%= member.name %></div>
-                                                        <small class="text-muted"><%= member.email %></small>
-                                                    </div>
-                                                    <div class="ms-auto">
-                                                        <span class="badge <%= member.isIIESTian ? 'bg-success' : 'bg-primary' %>">
-                                                            <%= member.isIIESTian ? 'IIESTian' : 'Non-IIESTian' %>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <% }); %>
-                                    </div>
-                                </div>
+                        <% participants.forEach(reg => { %>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>
+                                    <%= reg.teamId.name %>
+                                </span>
+                                <span>
+                                    <a href="/admin/teams/<%= reg.teamId._id %>">
+                                        <button class="btn btn-primary">
+                                            View Team
+                                        </button>
+                                    </a>
+                                </span>
                             </div>
                         <% }); %>
                     </div>
