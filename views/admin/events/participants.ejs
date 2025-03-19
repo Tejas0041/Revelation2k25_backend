@@ -14,12 +14,7 @@
                 <a href="/admin/event/<%= event._id %>" class="btn btn-outline-primary">Back to Event</a>
             </div>
             <div class="card-body">
-                <% if (participants.length === 0) { %>
-                    <div class="alert alert-info text-center">
-                        <i class="fas fa-info-circle me-2"></i>
-                        No participants registered for this event yet.
-                    </div>
-                <% } else if (event.type === 'Single') { %>
+                <% if (event.type === 'Single') { %>
                     <!-- Single Event Participants -->
                     <div class="table-responsive">
                         <table class="table table-hover">

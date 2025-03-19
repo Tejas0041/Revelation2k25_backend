@@ -5,7 +5,7 @@ const adminAuth = require('../middleware/adminAuth');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const catchAsync= require("../utils/catchAsync.js");
-const Event= require("../models/eventSchema.js")
+
 
 // Auth routes
 router.get('/login', adminController.loginPage);
@@ -30,8 +30,8 @@ router.post('/event/edit/:id', adminAuth, upload.fields([
     { name: 'backgroundImage', maxCount: 1 },
     { name: 'eventGif', maxCount: 1 }
 ]), catchAsync(adminController.updateEvent));
-router.get('/events/:id/participants', adminAuth, catchAsync(adminController.getEventParticipantsPage));
-router.post('/event/:id/toggle-status', adminAuth, catchAsync(adminController.toggleEventStatus));
+router.get('/event/participants/:id', adminAuth, catchAsync(adminController.getEventParticipantsPage));
+router.get(`/event/toggle-islive/:id`, adminAuth, catchAsync(adminController.toggleIsLive))
 
 // Rest of routes
 router.get('/users', adminAuth, catchAsync(adminController.getAllUsersPage));

@@ -22,7 +22,7 @@ module.exports.googleAuth = async (req, res) => {
             await user.save();
         }
   
-        const jwtToken = jwt.sign({ id: user.id, email }, process.env.JWT_SECRET, { expiresIn: "30d" });
+        const jwtToken = jwt.sign({ id: user.id, email }, process.env.JWT_SECRET, { expiresIn: "48h" });
   
         return res.json({ token: jwtToken, user });
     } catch (err) {

@@ -84,12 +84,6 @@
                     value="<%= event.registrationAmount %>">
             </div>
             
-            <div class="form-group">
-                <label>Current Poster:</label>
-                <img src="<%= event.posterImage.url %>" alt="Current poster" style="max-width: 200px; display: block; margin: 10px 0;">
-                <label for="poster">Update Poster (optional):</label>
-                <input type="file" id="poster" name="poster" accept="image/*">
-            </div>
             
             <div class="form-group">
                 <label for="prizePool">Prize Pool (₹):</label>
@@ -113,61 +107,6 @@
                     value="<%= event.registrationLink || '' %>">
             </div>
 
-            <div class="form-group">
-                <label for="poster">Event Poster</label>
-                <div class="current-image">
-                    <img src="<%= event.posterImage.url %>" alt="Current poster" class="thumbnail">
-                    <span>Current poster</span>
-                </div>
-                <div class="file-input-container">
-                    <label class="file-input-label">
-                        <svg viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
-                        </svg>
-                        Update Poster
-                        <input type="file" id="poster" name="poster" accept="image/*" onchange="updateFileName(this, 'posterFileName')">
-                    </label>
-                    <div class="file-name" id="posterFileName"></div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="backgroundImage">Background Image</label>
-                <div class="current-image">
-                    <img src="<%= event.backgroundImage.url %>" alt="Current background" class="thumbnail">
-                    <span>Current background</span>
-                </div>
-                <div class="file-input-container">
-                    <label class="file-input-label">
-                        <svg viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
-                        </svg>
-                        Update Background
-                        <input type="file" id="backgroundImage" name="backgroundImage" accept="image/*" onchange="updateFileName(this, 'bgFileName')">
-                    </label>
-                    <div class="file-name" id="bgFileName"></div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="eventGif">Event GIF</label>
-                <% if (event.eventGif) { %>
-                    <div class="current-image">
-                        <img src="<%= event.eventGif.url %>" alt="Current GIF" class="thumbnail">
-                        <span>Current GIF</span>
-                    </div>
-                <% } %>
-                <div class="file-input-container">
-                    <label class="file-input-label">
-                        <svg viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
-                        </svg>
-                        <%= event.eventGif ? 'Update' : 'Add' %> GIF
-                        <input type="file" id="eventGif" name="eventGif" accept="image/gif" onchange="updateFileName(this, 'gifFileName')">
-                    </label>
-                    <div class="file-name" id="gifFileName"></div>
-                </div>
-            </div>
 
             <button type="submit">Update Event</button>
         </form>

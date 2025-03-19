@@ -43,10 +43,14 @@ module.exports.login = async (req, res) => {
     }
 };
 
-module.exports.dashboard = async (req, res) => {
+exports.dashboard = async (req, res) => {
     try {
-        const events = await Event.find();
-        
+        const [events, users, registrations] = await Promise.all([
+            Event.find(),
+            User.find({ type: 'normal' }),
+            EventRegistration.find().populate('event userId teamId')
+        ]);
+
         const eventTypes = {
             total: events.length,
             single: events.filter(e => e.type === 'Single').length,
@@ -54,56 +58,47 @@ module.exports.dashboard = async (req, res) => {
             combined: events.filter(e => e.type === 'Combined').length
         };
 
-        const [totalUsers, iiestianUsers] = await Promise.all([
-            User.countDocuments({ type: 'normal' }),
-            User.countDocuments({ type: 'normal', isIIESTian: true })
-        ]);
+        const userStats = {
+            total: users.length,
+            iiestian: users.filter(u => u.isIIESTian).length,
+            nonIiestian: users.filter(u => !u.isIIESTian).length
+        };
 
-        const [totalRegs, individualRegs] = await Promise.all([
-            EventRegistration.countDocuments(),
-            EventRegistration.countDocuments({ registrationType: 'individual' })
-        ]);
+        const registrationStats = {
+            total: registrations.length,
+            individual: registrations.filter(r => r.registrationType === 'individual').length,
+            team: registrations.filter(r => r.registrationType === 'team').length
+        };
 
-        const eventStats = await Promise.all(events.map(async (event) => {
-            const registrations = await EventRegistration.find({ event: event._id })
-                .populate('userId teamId');
-
-            const stats = {
+        const eventStats = events.map(event => {
+            const eventRegistrations = registrations.filter(r => r.event?._id.toString() === event._id.toString());
+            
+            return {
                 name: event.name,
                 type: event.type,
                 registrations: {
-                    total: registrations.length,
-                    individual: registrations.filter(r => r.registrationType === 'individual').length,
-                    team: registrations.filter(r => r.registrationType === 'team').length,
-                    iiestian: registrations.filter(r => 
+                    total: eventRegistrations.length,
+                    individual: eventRegistrations.filter(r => r.registrationType === 'individual').length,
+                    team: eventRegistrations.filter(r => r.registrationType === 'team').length,
+                    iiestian: eventRegistrations.filter(r => 
                         (r.registrationType === 'individual' && r.userId?.isIIESTian) ||
                         (r.registrationType === 'team' && r.teamId?.teamLeader?.isIIESTian)
                     ).length,
-                    nonIiestian: registrations.filter(r => 
+                    nonIiestian: eventRegistrations.filter(r => 
                         (r.registrationType === 'individual' && !r.userId?.isIIESTian) ||
                         (r.registrationType === 'team' && !r.teamId?.teamLeader?.isIIESTian)
                     ).length
                 }
             };
-
-            return stats;
-        }));
+        }).sort((a, b) => b.registrations.total - a.registrations.total);
 
         res.render('admin/dashboard', {
             title: 'Dashboard',
             path: 'dashboard',
             stats: {
                 eventTypes,
-                users: {
-                    total: totalUsers,
-                    iiestian: iiestianUsers,
-                    nonIiestian: totalUsers - iiestianUsers
-                },
-                registrations: {
-                    total: totalRegs,
-                    individual: individualRegs,
-                    team: totalRegs - individualRegs
-                },
+                users: userStats,
+                registrations: registrationStats,
                 eventStats
             }
         });
@@ -177,7 +172,10 @@ module.exports.createEvent = async (req, res) => {
             startTime, 
             endTime, 
             venue, 
-            registrationAmount 
+            registrationAmount,
+            registrationFrom,
+            registrationLink,
+            prizePool  // Make sure prizePool is destructured from req.body
         } = req.body;
 
         const needsSizeLimits = type === 'Team' || type === 'Combined';
@@ -186,58 +184,80 @@ module.exports.createEvent = async (req, res) => {
             max: parseInt(teamSize.max) || 1
         } : { min: 1, max: 1 };
 
-        if (!req.file) {
+        // Check if required files are present
+        if (!req.files || !req.files.poster || !req.files.backgroundImage) {
             return res.render('admin/events/new', { 
-                error: 'Event poster is required',
-                formData: req.body
+                error: 'Both poster and background image are required',
+                formData: req.body,
+                title: 'Create Event',
+                path: '/events'
             });
         }
 
-        return new Promise((resolve, reject) => {
-            let cld_upload_stream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'revelation2k25/events',
-                },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
-            );
-
-            streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
-        })
-        .then(async (result) => {
-            const event = new Event({
-                name,
-                type,
-                teamSize: sizeLimits,
-                description,
-                rules,
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
-                venue,
-                registrationAmount: parseInt(registrationAmount),
-                posterImage: {
-                    url: result.secure_url,
-                    filename: result.public_id
-                }
+        const uploadImage = async (file) => {
+            return new Promise((resolve, reject) => {
+                let cld_upload_stream = cloudinary.uploader.upload_stream(
+                    { folder: 'revelation2k25/events' },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                streamifier.createReadStream(file.buffer).pipe(cld_upload_stream);
             });
+        };
 
-            await event.save();
-            res.redirect('/admin/events');
-        })
-        .catch((error) => {
-            console.error('Error creating event:', error);
-            res.render('admin/events/new', { 
-                error: 'Error uploading image. Please try again.',
-                formData: req.body
-            });
-        });
+        // Upload all images in parallel
+        const [posterResult, backgroundResult, gifResult] = await Promise.all([
+            uploadImage(req.files.poster[0]),
+            uploadImage(req.files.backgroundImage[0]),
+            req.files.eventGif ? uploadImage(req.files.eventGif[0]) : null
+        ]);
+
+        // Create event data
+        const eventData = {
+            name,
+            type,
+            teamSize: sizeLimits,
+            description,
+            rules: Array.isArray(rules) ? rules.filter(rule => rule.trim()) : [rules],
+            startTime: new Date(startTime),
+            endTime: new Date(endTime),
+            venue,
+            registrationAmount: parseInt(registrationAmount),
+            prizePool: parseInt(prizePool), // Add prizePool to eventData
+            posterImage: {
+                url: posterResult.secure_url,
+                filename: posterResult.public_id
+            },
+            backgroundImage: {
+                url: backgroundResult.secure_url,
+                filename: backgroundResult.public_id
+            },
+            registrationFrom,
+            registrationLink: registrationFrom === 'external' ? registrationLink : null,
+            isRegistrationOpen: true
+        };
+
+        // Add GIF if uploaded
+        if (gifResult) {
+            eventData.eventGif = {
+                url: gifResult.secure_url,
+                filename: gifResult.public_id
+            };
+        }
+
+        const event = new Event(eventData);
+        await event.save();
+        
+        return res.redirect('/admin/events');
     } catch (error) {
         console.error('Error creating event:', error);
-        res.render('admin/event/new', { 
+        return res.render('admin/events/new', { 
             error: error.message || 'Error creating event',
-            formData: req.body
+            formData: req.body,
+            title: 'Create Event',
+            path: '/events'
         });
     }
 };
@@ -261,7 +281,8 @@ module.exports.updateEvent = async (req, res) => {
         const { 
             name, type, teamSize, description, 
             rules, startTime, endTime, 
-            venue, registrationAmount 
+            venue, registrationAmount, prizePool,
+            registrationFrom, registrationLink  // Add these fields
         } = req.body;
 
         const needsSizeLimits = type === 'Team' || type === 'Combined';
@@ -275,32 +296,35 @@ module.exports.updateEvent = async (req, res) => {
             type,
             teamSize: sizeLimits,
             description,
-            rules,
+            rules: Array.isArray(rules) ? rules.filter(rule => rule.trim()) : [rules],
             startTime: new Date(startTime),
             endTime: new Date(endTime),
             venue,
-            registrationAmount: parseInt(registrationAmount)
+            registrationAmount: parseInt(registrationAmount),
+            prizePool: parseInt(prizePool),
+            registrationFrom,
+            registrationLink: registrationFrom === 'external' ? registrationLink : null
         };
 
-        if (req.file) {
-            const result = await new Promise((resolve, reject) => {
-                let cld_upload_stream = cloudinary.uploader.upload_stream(
-                    {
-                        folder: 'revelation2k25/events',
-                    },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    }
-                );
-                streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
-            });
+        // if (req.files) {
+        //     const result = await new Promise((resolve, reject) => {
+        //         let cld_upload_stream = cloudinary.uploader.upload_stream(
+        //             {
+        //                 folder: 'revelation2k25/events',
+        //             },
+        //             (error, result) => {
+        //                 if (error) reject(error);
+        //                 else resolve(result);
+        //             }
+        //         );
+        //         streamifier.createReadStream(req.files.buffer).pipe(cld_upload_stream);
+        //     });
 
-            updateData.posterImage = {
-                url: result.secure_url,
-                filename: result.public_id
-            };
-        }
+        //     updateData.posterImage = {
+        //         url: result.secure_url,
+        //         filename: result.public_id
+        //     };
+        // }
 
         const event = await Event.findByIdAndUpdate(
             req.params.id, 
@@ -344,6 +368,7 @@ module.exports.toggleEventStatus = async (req, res) => {
         });
     }
 };
+
 
 module.exports.getAllUsersPage = async (req, res) => {
     try {
@@ -631,27 +656,36 @@ module.exports.getEventParticipantsPage = async (req, res) => {
         let participants = [];
 
         if (event.type === 'Single') {
-            // For single events, get all users who registered individually
-            const registrations = await EventRegistration.find({
-                event: eventId,
-                registrationType: 'individual'
-            }).populate('userId', 'name email phoneNumber isIIESTian picture');
+            // For single events, find users who have this event in their eventsRegistered array
+            participants = await User.find({
+                'eventsRegistered': {
+                    $elemMatch: {
+                        id: eventId,
+                        team: false
+                    }
+                }
+            }).select('name email phoneNumber isIIESTian picture');
 
-            participants = registrations.map(reg => reg.userId);
         } else {
-            // For team events, get all teams registered for this event
-            const registrations = await EventRegistration.find({
-                event: eventId,
-                registrationType: 'team'
-            }).populate({
-                path: 'teamId',
-                populate: {
-                    path: 'teamLeader teamMembers',
+            // For team events, find teams whose members have this event registered
+            const teams = await Team.find({
+                'teamMembers.0': { $exists: true } // Only get teams with at least one member
+            }).populate([
+                { 
+                    path: 'teamLeader',
+                    select: 'name email phoneNumber isIIESTian picture'
+                },
+                {
+                    path: 'teamMembers',
                     select: 'name email phoneNumber isIIESTian picture'
                 }
-            });
+            ]);
 
-            participants = registrations.map(reg => reg.teamId);
+            participants = teams.filter(team => {
+                return team.teamLeader.eventsRegistered?.some(event => 
+                    event.id.toString() === eventId && event.team === true
+                );
+            });
         }
 
         res.render('admin/events/participants', {
@@ -668,3 +702,21 @@ module.exports.getEventParticipantsPage = async (req, res) => {
         });
     }
 };
+
+
+module.exports.toggleIsLive= async(req, res)=>{
+    try{
+        const {id}= req.params;
+        const event= await Event.findById(id);
+
+        if(!event){
+            return res.status(404).json({message: "Event not found"});
+        }
+
+        event.isRegistrationOpen= !event.isRegistrationOpen;
+        event.save();
+        return res.redirect(`/admin/event/${id}`);
+    }catch(error){
+        return res.status(500).json({message: "Failed to toggler"})
+    }
+}
