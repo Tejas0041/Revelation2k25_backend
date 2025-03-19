@@ -198,6 +198,7 @@ module.exports.registerEvent = async (req, res) => {
         });
     }
 };
+
 module.exports.getEventParticipants = async (req, res) => {
     try {
         const { id: eventId } = req.params;
@@ -307,13 +308,15 @@ module.exports.getEventParticipants = async (req, res) => {
         });
     }
 };
+
+/*
 module.exports.getRegistrationStatus = async (req, res) => {
     try {
         const { id } = req.params;  // Changed from eventId to id to match route param
         // const userId = req.user._id;
         console.log(req.user);
 
-        if (!userId) {
+        if (!req.user) {
             return res.status(401).json({
                 success: false,
                 message: "User not authenticated"
@@ -401,6 +404,7 @@ module.exports.getRegistrationStatus = async (req, res) => {
         });
     }
 };
+*/
 
 module.exports.makeRequest = async (req, res) => {
     try {
@@ -434,6 +438,16 @@ module.exports.makeRequest = async (req, res) => {
                 message: "Event not found"
             });
         }
+
+        if(!req.user._id.equals(team.teamLeader)){
+            const sendersAllRequests= await Request.find({
+               $and: [{ sender: req.user._id}, {event: id}, {status: 'pending'}]
+            })
+            if(sendersAllRequests.length>=1){
+                return res.status(403).json({message: "You already a pending request for this events"});
+            }
+        }
+
 
         if (team.teamMembers.length >= event.teamSize.max) {
             return res.status(400).json({
@@ -493,6 +507,8 @@ module.exports.replyRequest= async (req, res) => {
 
         if (isAccepted) {
             const team= await Team.findById(request.team);
+            team.teamSize++;
+
             await Team.findByIdAndUpdate(request.team, {
                 $push: {
                     teamMembers: team.teamLeader.equals(request.receiver)?request.sender:request.receiver 

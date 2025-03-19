@@ -98,6 +98,22 @@
             </div>
 
             <div class="form-group">
+                <label for="registrationFrom">Registration From:</label>
+                <select id="registrationFrom" name="registrationFrom" required onchange="toggleRegistrationLink()">
+                    <option value="website" <%= event.registrationFrom === 'website' ? 'selected' : '' %>>Website</option>
+                    <option value="external" <%= event.registrationFrom === 'external' ? 'selected' : '' %>>External Link</option>
+                    <option value="notReq" <%= event.registrationFrom === 'notReq' ? 'selected' : '' %>>Not Required</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="registrationLinkGroup" style="display: <%= event.registrationFrom === 'external' ? 'block' : 'none' %>">
+                <label for="registrationLink">Registration Link:</label>
+                <input type="url" id="registrationLink" name="registrationLink" 
+                    placeholder="https://example.com/register"
+                    value="<%= event.registrationLink || '' %>">
+            </div>
+
+            <div class="form-group">
                 <label for="poster">Event Poster</label>
                 <div class="current-image">
                     <img src="<%= event.posterImage.url %>" alt="Current poster" class="thumbnail">
@@ -207,6 +223,21 @@
         }
 
         updateRemoveButtons();
+
+        function toggleRegistrationLink() {
+            const registrationFrom = document.getElementById('registrationFrom').value;
+            const linkGroup = document.getElementById('registrationLinkGroup');
+            const linkInput = document.getElementById('registrationLink');
+
+            if (registrationFrom === 'external') {
+                linkGroup.style.display = 'block';
+                linkInput.required = true;
+            } else {
+                linkGroup.style.display = 'none';
+                linkInput.required = false;
+                linkInput.value = '';
+            }
+        }
     </script>
 
     <style>

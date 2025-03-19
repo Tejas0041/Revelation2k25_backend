@@ -43,14 +43,10 @@ module.exports.login = async (req, res) => {
     }
 };
 
-exports.dashboard = async (req, res) => {
+module.exports.dashboard = async (req, res) => {
     try {
-        const [events, users, registrations] = await Promise.all([
-            Event.find(),
-            User.find({ type: 'normal' }),
-            EventRegistration.find().populate('event userId teamId')
-        ]);
-
+        const events = await Event.find();
+        
         const eventTypes = {
             total: events.length,
             single: events.filter(e => e.type === 'Single').length,
@@ -58,47 +54,56 @@ exports.dashboard = async (req, res) => {
             combined: events.filter(e => e.type === 'Combined').length
         };
 
-        const userStats = {
-            total: users.length,
-            iiestian: users.filter(u => u.isIIESTian).length,
-            nonIiestian: users.filter(u => !u.isIIESTian).length
-        };
+        const [totalUsers, iiestianUsers] = await Promise.all([
+            User.countDocuments({ type: 'normal' }),
+            User.countDocuments({ type: 'normal', isIIESTian: true })
+        ]);
 
-        const registrationStats = {
-            total: registrations.length,
-            individual: registrations.filter(r => r.registrationType === 'individual').length,
-            team: registrations.filter(r => r.registrationType === 'team').length
-        };
+        const [totalRegs, individualRegs] = await Promise.all([
+            EventRegistration.countDocuments(),
+            EventRegistration.countDocuments({ registrationType: 'individual' })
+        ]);
 
-        const eventStats = events.map(event => {
-            const eventRegistrations = registrations.filter(r => r.event?._id.toString() === event._id.toString());
-            
-            return {
+        const eventStats = await Promise.all(events.map(async (event) => {
+            const registrations = await EventRegistration.find({ event: event._id })
+                .populate('userId teamId');
+
+            const stats = {
                 name: event.name,
                 type: event.type,
                 registrations: {
-                    total: eventRegistrations.length,
-                    individual: eventRegistrations.filter(r => r.registrationType === 'individual').length,
-                    team: eventRegistrations.filter(r => r.registrationType === 'team').length,
-                    iiestian: eventRegistrations.filter(r => 
+                    total: registrations.length,
+                    individual: registrations.filter(r => r.registrationType === 'individual').length,
+                    team: registrations.filter(r => r.registrationType === 'team').length,
+                    iiestian: registrations.filter(r => 
                         (r.registrationType === 'individual' && r.userId?.isIIESTian) ||
                         (r.registrationType === 'team' && r.teamId?.teamLeader?.isIIESTian)
                     ).length,
-                    nonIiestian: eventRegistrations.filter(r => 
+                    nonIiestian: registrations.filter(r => 
                         (r.registrationType === 'individual' && !r.userId?.isIIESTian) ||
                         (r.registrationType === 'team' && !r.teamId?.teamLeader?.isIIESTian)
                     ).length
                 }
             };
-        }).sort((a, b) => b.registrations.total - a.registrations.total);
+
+            return stats;
+        }));
 
         res.render('admin/dashboard', {
             title: 'Dashboard',
             path: 'dashboard',
             stats: {
                 eventTypes,
-                users: userStats,
-                registrations: registrationStats,
+                users: {
+                    total: totalUsers,
+                    iiestian: iiestianUsers,
+                    nonIiestian: totalUsers - iiestianUsers
+                },
+                registrations: {
+                    total: totalRegs,
+                    individual: individualRegs,
+                    team: totalRegs - individualRegs
+                },
                 eventStats
             }
         });
@@ -317,7 +322,28 @@ module.exports.updateEvent = async (req, res) => {
     }
 };
 
+module.exports.toggleEventStatus = async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
 
+        event.isRegistrationOpen = !event.isRegistrationOpen;
+        await event.save();
+
+        res.json({ 
+            success: true, 
+            isRegistrationOpen: event.isRegistrationOpen 
+        });
+    } catch (error) {
+        console.error('Error toggling event status:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating event status' 
+        });
+    }
+};
 
 module.exports.getAllUsersPage = async (req, res) => {
     try {
@@ -593,20 +619,7 @@ module.exports.getAllRegistrationsPage = async (req, res) => {
 module.exports.getEventParticipantsPage = async (req, res) => {
     try {
         const eventId = req.params.id;
-        const [event, registrations] = await Promise.all([
-            Event.findById(eventId),
-            EventRegistration.find({ event: eventId })
-                .populate('event')
-                .populate('userId', 'name email isIIESTian')
-                .populate({
-                    path: 'teamId',
-                    populate: {
-                        path: 'teamLeader teamMembers',
-                        select: 'name email isIIESTian'
-                    }
-                })
-                .sort({ registeredAt: -1 })
-        ]);
+        const event = await Event.findById(eventId);
 
         if (!event) {
             return res.status(404).render('error', { 
@@ -615,9 +628,35 @@ module.exports.getEventParticipantsPage = async (req, res) => {
             });
         }
 
+        let participants = [];
+
+        if (event.type === 'Single') {
+            // For single events, get all users who registered individually
+            const registrations = await EventRegistration.find({
+                event: eventId,
+                registrationType: 'individual'
+            }).populate('userId', 'name email phoneNumber isIIESTian picture');
+
+            participants = registrations.map(reg => reg.userId);
+        } else {
+            // For team events, get all teams registered for this event
+            const registrations = await EventRegistration.find({
+                event: eventId,
+                registrationType: 'team'
+            }).populate({
+                path: 'teamId',
+                populate: {
+                    path: 'teamLeader teamMembers',
+                    select: 'name email phoneNumber isIIESTian picture'
+                }
+            });
+
+            participants = registrations.map(reg => reg.teamId);
+        }
+
         res.render('admin/events/participants', {
             event,
-            registrations,
+            participants,
             title: `${event.name} - Participants`,
             path: '/events'
         });

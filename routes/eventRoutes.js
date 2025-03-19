@@ -18,8 +18,8 @@ router.route('/:id/register')
 router.route('/:id/participants')
     .get(catchAsync(eventController.getEventParticipants));
 
-router.route('/:eventId/registration-status')
-    .get(authenticateToken, catchAsync(eventController.getRegistrationStatus));
+// router.route('/:eventId/registration-status')
+//     .get(authenticateToken, catchAsync(eventController.getRegistrationStatus));
 
 router.route('/:id/make-request')
     .post(authenticateToken, catchAsync(eventController.makeRequest));

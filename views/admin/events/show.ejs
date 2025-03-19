@@ -64,7 +64,16 @@
                         </div>
                         <div>
                             <a href="/admin/event/edit/<%= event._id %>" class="btn btn-outline-primary me-2">Edit Event</a>
-                            <a href="/admin/events/<%= event._id %>/participants" class="btn btn-primary">View Participants</a>
+                            <% if (event.registrationFrom === 'website') { %>
+                                <a href="/admin/events/<%= event._id %>/participants" class="btn btn-primary">View Participants</a>
+                            <% } %>
+                        </div>
+                        <div class="registration-status">
+                            <button onclick="toggleRegistrationStatus('<%= event._id %>')" 
+                                    class="status-toggle <%= event.isRegistrationOpen ? 'active' : 'inactive' %>">
+                                <span class="status-dot"></span>
+                                <%= event.isRegistrationOpen ? 'Registration Open' : 'Registration Closed' %>
+                            </button>
                         </div>
                     </div>
 
@@ -113,6 +122,36 @@
                             <div class="p-3 bg-light rounded">
                                 <div class="text-muted small mb-1">Venue</div>
                                 <div><%= event.venue %></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted small mb-1">Registration Details</div>
+                                <div class="d-flex flex-column gap-2">
+                                    <div>
+                                        <strong>Source:</strong> 
+                                        <span class="registration-source <%= event.registrationFrom %>">
+                                            <% if (event.registrationFrom === 'website') { %>
+                                                Website Registration
+                                            <% } else if (event.registrationFrom === 'external') { %>
+                                                External Link
+                                            <% } else { %>
+                                                Not Required
+                                            <% } %>
+                                        </span>
+                                    </div>
+                                    <% if (event.registrationFrom === 'external' && event.registrationLink) { %>
+                                        <div>
+                                            <strong>Registration Link:</strong>
+                                            <a href="<%= event.registrationLink %>" target="_blank" class="external-link">
+                                                <%= event.registrationLink %>
+                                                <svg class="external-icon" viewBox="0 0 24 24" width="16" height="16">
+                                                    <path fill="currentColor" d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    <% } %>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -366,6 +405,130 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .registration-status {
+            margin-left: 16px;
+        }
+
+        .status-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .status-toggle.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-toggle.inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-toggle.active .status-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(22, 101, 52, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(22, 101, 52, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(22, 101, 52, 0);
+            }
+        }
+
+        .registration-source {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .registration-source.website {
+            background: rgba(219, 234, 254, 0.8);
+            color: #1e40af;
+        }
+
+        .registration-source.external {
+            background: rgba(220, 252, 231, 0.8);
+            color: #166534;
+        }
+
+        .registration-source.notReq {
+            background: rgba(254, 226, 226, 0.8);
+            color: #991b1b;
+        }
+
+        .external-link {
+            color: #3b82f6;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.875rem;
+            word-break: break-all;
+        }
+
+        .external-link:hover {
+            text-decoration: underline;
+        }
+
+        .external-icon {
+            flex-shrink: 0;
+        }
     </style>
+
+    <script>
+        async function toggleRegistrationStatus(eventId) {
+            try {
+                const response = await fetch(`/admin/event/${eventId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const button = document.querySelector('.status-toggle');
+                    button.classList.toggle('active');
+                    button.classList.toggle('inactive');
+                    
+                    const newStatus = data.isRegistrationOpen;
+                    button.innerHTML = `
+                        <span class="status-dot"></span>
+                        ${newStatus ? 'Registration Open' : 'Registration Closed'}
+                    `;
+                }
+            } catch (error) {
+                console.error('Error toggling status:', error);
+                alert('Error updating registration status');
+            }
+        }
+    </script>
 </body>
 </html>

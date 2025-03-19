@@ -60,22 +60,23 @@ const eventSchema= mongoose.Schema({
     posterImage: imageSchema,
     backgroundImage: imageSchema,
     eventGif: imageSchema,
-    // registrationFrom: {
-    //     type: String,
-    //     enum: ['website', 'external', 'notReq'],
-    //     required: true
-    // },
-    // isRegistrationOpen:{
-    //     type: Boolean,
-    //     required: true
-    // },
-    // registrationLink:{
-    //     type: String,
-    //     required: function(){
-    //         return this.registrationFrom === 'external';
-    //     },
-    //     default: null
-    // },
+    registrationFrom: {
+        type: String,
+        enum: ['website', 'external', 'notReq'],
+        required: true
+    },
+    isRegistrationOpen:{
+        type: Boolean,
+        required: true,
+        default: true
+    },
+    registrationLink:{
+        type: String,
+        required: function(){
+            return this.registrationFrom === 'external';
+        },
+        default: null
+    },
 });
 
 module.exports= mongoose.model('Event', eventSchema);

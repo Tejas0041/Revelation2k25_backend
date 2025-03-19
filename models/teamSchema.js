@@ -20,7 +20,8 @@ const teamSchema = new mongoose.Schema({
     }],
     teamSize: {
         type: Number,
-        required: true
+        required: true,
+        default: 1
     }
 });
 

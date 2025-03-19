@@ -89,6 +89,21 @@
                 <input type="number" id="prizePool" name="prizePool" required min="0"
                     value="<%= formData ? formData.prizePool : '' %>">
             </div>
+
+            <div class="form-group">
+                <label for="registrationFrom">Registration From:</label>
+                <select id="registrationFrom" name="registrationFrom" required onchange="toggleRegistrationLink()">
+                    <option value="website">Website</option>
+                    <option value="external">External Link</option>
+                    <option value="notReq">Not Required</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="registrationLinkGroup" style="display: none;">
+                <label for="registrationLink">Registration Link:</label>
+                <input type="url" id="registrationLink" name="registrationLink" 
+                    placeholder="https://example.com/register">
+            </div>
             
             <div class="form-group">
                 <label for="poster">Event Poster</label>
@@ -189,6 +204,21 @@
                     button.style.display = 'none';
                 }
             });
+        }
+
+        function toggleRegistrationLink() {
+            const registrationFrom = document.getElementById('registrationFrom').value;
+            const linkGroup = document.getElementById('registrationLinkGroup');
+            const linkInput = document.getElementById('registrationLink');
+
+            if (registrationFrom === 'external') {
+                linkGroup.style.display = 'block';
+                linkInput.required = true;
+            } else {
+                linkGroup.style.display = 'none';
+                linkInput.required = false;
+                linkInput.value = '';
+            }
         }
     </script>
 

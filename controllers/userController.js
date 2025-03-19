@@ -12,10 +12,22 @@ module.exports.getAllUsers = async (req, res) => {
             type: 'normal', 
             isIIESTian: isIIESTian,
             'eventsRegistered.id': { $ne: id }
+        }).lean();
+
+        const pendingRequests = await Request.find({
+            event: id,
+            status: 'pending'
         });
 
+        const usersWithFlag = users.map(user => ({
+            ...user,
+            flag: !pendingRequests.some(
+                request => 
+                    (request.sender.equals(user._id) || request.receiver.equals(user._id))
+            )
+        }));
 
-        return res.json({ message: "Successfully fetched all users", body: users });
+        return res.json({ message: "Successfully fetched all users", body: usersWithFlag });
     } catch (error) {
         res.status(500).json({ message: "Error getting users", error: error.message });
     }
