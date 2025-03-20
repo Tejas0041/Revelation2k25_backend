@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Users - Revelation 2k25</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filters select {
+            min-width: 150px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .no-data-message-full {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 24px;
+        }
+
+        .no-data-message-full i {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .no-data-message-full h3 {
+            color: #475569;
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .no-data-message-full p {
+            color: #64748b;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+
+        <div class="page-header">
+            <h2>Grade Participants (Select an event)</h2>
+        </div>
+        <p style="background-color: #3b82f8; border-radius: 5px; padding: 5px 5px; text-align: center; color: white ; font-weight: bold;">ONLY EVENTS HAVING REGISTRATIONS FROM WEBSITE CAN BE GRADED FROM HERE</p>
+
+        <div class="users-table-container">
+            <% if (allEvents.length === 0) { %>
+                <div class="no-data-message-full">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>No Events Found</h3>
+                    <p>There are no events yet.</p>
+                </div>
+            <% } else { %>
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th width="35%">Event Name</th>
+                            <th width="15%">Select</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% allEvents.forEach(event => { %>
+                            <tr>
+                                <td><%= event.name %></td>
+                                <td>
+                                    <a href="/admin/grade-participants/<%= event._id %>/1" class="btn btn-small">Grade Participants</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

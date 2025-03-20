@@ -6,7 +6,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
-
+const Grade= require("../models/gradeSchema.js");
+const mongoose = require('mongoose');
 
 module.exports.loginPage = (req, res) => {
     return res.render('admin/login', { 
@@ -736,6 +737,7 @@ module.exports.toggleIsLive= async(req, res)=>{
     }
 }
 
+/*
 module.exports.deleteEventRegistration= async(req, res)=>{
     try{
         const {id}= req.params;
@@ -784,3 +786,368 @@ module.exports.deleteEventRegistration= async(req, res)=>{
         return res.status(500).json({message: "Failed to delete registration"})
     }
 }
+*/
+
+module.exports.gradeParticipantsPage= async(req, res)=>{
+    try{
+        const allEvents= await Event.find({registrationFrom: 'website'});
+
+        return res.render('admin/grade/gradeParticipantsAll.ejs', {allEvents});
+
+    }catch(error){
+        console.error('Error fetching grade participants page:', error);
+        return res.status(500).render('error', {
+            message: 'Error fetching grade participants page',
+            error: process.env.NODE_ENV === 'development' ? error : {}
+        });
+    }
+}
+
+// module.exports.gradeParticipantsOfEventPage= async(req, res)=>{
+//     try{
+//         const {id}= req.params;
+//         const {round}= req.params;
+
+//         const event= await Event.findById(id);
+//         if(!event){
+//             return res.status(404).json({message: "Event not found"});
+//         }
+
+//         const grades= await Grade.find({event: id, round});
+//         const previousGrades= await Grade.find({event: id, round: (round-1)})
+
+//         const allRegs= await EventRegistration.find({event: id}).populate('userId teamId');
+
+//         return res.render('admin/grade/gradeParticipantsEvent.ejs', {allRegs, event, grades, previousGrades});
+//     }catch(error){
+//         console.error('Error fetching grade participants for event page:', error);
+//         return res.status(500).render('error', {
+//             message: 'Error fetching grade participants for event page',
+//             error: process.env.NODE_ENV === 'development' ? error : {}
+//         });
+//     }
+// }
+// module.exports.gradeParticipantsOfEventPage = async (req, res) => {
+//     try {
+//         const { id, round } = req.params;
+
+//         // Find the event
+//         const event = await Event.findById(id);
+//         if (!event) {
+//             return res.status(404).json({ message: "Event not found" });
+//         }
+
+//         // Fetch all grades for the event
+//         const allGrades = await Grade.find({ event: id }).sort({ round: 1 });
+
+//         // Fetch grades for the current round
+//         const currentRoundGrades = allGrades.filter(g => g.round === parseInt(round));
+
+//         // Fetch all registrations for the event
+//         const allRegs = await EventRegistration.find({ event: id }).populate('userId teamId');
+
+//         // Render the EJS template with the correct data
+//         return res.render('admin/grade/gradeParticipantsEvent.ejs', {
+//             allRegs,
+//             event,
+//             allGrades, // Pass all rounds data to the frontend
+//             currentRound: parseInt(round), // Pass the current round to the frontend
+//             currentRoundGrades // Pass grades for the current round
+//         });
+
+//     } catch (error) {
+//         console.error('Error fetching grade participants for event page:', error);
+//         return res.status(500).render('error', {
+//             message: 'Error fetching grade participants for event page',
+//             error: process.env.NODE_ENV === 'development' ? error : {}
+//         });
+//     }
+// };
+module.exports.gradeParticipantsOfEventPage = async (req, res) => {
+    try {
+        const { id, round } = req.params;
+        const currentRound = parseInt(round);
+
+        // Find the event
+        const event = await Event.findById(id);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        // Fetch all grades for the event
+        const allGrades = await Grade.find({ event: id }).sort({ round: 1 });
+
+        // Fetch grades for the current round
+        const currentRoundGrades = allGrades.filter(g => g.round === currentRound);
+
+        // Fetch all registrations for the event
+        let allRegs = await EventRegistration.find({ event: id }).populate('userId teamId');
+
+        // Check if there is a previous round
+        if (currentRound > 1) {
+            const previousRound = currentRound - 1;
+            const prevRoundGrades = await Grade.find({ event: id, round: previousRound });
+
+            // Get disqualified participants from the previous round
+            const disqualifiedParticipants = new Set();
+            prevRoundGrades.forEach(grade => {
+                if (event.type === 'Team') {
+                    grade.teams.forEach(team => {
+                        if (team.isDisqualified) disqualifiedParticipants.add(team.id.toString());
+                    });
+                } else {
+                    grade.users.forEach(user => {
+                        if (user.isDisqualified) disqualifiedParticipants.add(user.id.toString());
+                    });
+                }
+            });
+
+            // Filter out disqualified participants
+            allRegs = allRegs.filter(reg => {
+                const participantId = event.type === 'Team' ? reg.teamId?._id.toString() : reg.userId?._id.toString();
+                return !disqualifiedParticipants.has(participantId);
+            });
+        }
+
+        // Render the EJS template with the correct data
+        return res.render('admin/grade/gradeParticipantsEvent.ejs', {
+            allRegs,
+            event,
+            allGrades, // Pass all rounds data to the frontend
+            currentRound, // Pass the current round to the frontend
+            currentRoundGrades // Pass grades for the current round
+        });
+
+    } catch (error) {
+        console.error('Error fetching grade participants for event page:', error);
+        return res.status(500).render('error', {
+            message: 'Error fetching grade participants for event page',
+            error: process.env.NODE_ENV === 'development' ? error : {}
+        });
+    }
+};
+
+// module.exports.toggleQualifyParticipant= async(req, res)=>{
+//     try{
+//         const {eventId, round}= req.params;
+//         const event= await Event.findById(eventId);
+
+//         if(!event){
+//             return res.status(404).json({message: "Event not found"});
+//         }
+
+//         if(event.type==='Team'){
+//             const grades= await Grade.find({event: id, round});
+//         }else if(event.type==='Single'){
+//             const grades= await Grade.find({event: id, round});     
+//         }
+
+        
+//     }catch(error){
+//         console.error('Error changing qualification status of participant:', error);
+//         return res.status(500).render('error', {
+//             message: 'Error changing qualification status of participant',
+//             error: process.env.NODE_ENV === 'development' ? error : {}
+//         });
+//     }
+// }
+
+module.exports.toggleQualifyParticipant = async (req, res) => {
+    try {
+        const { eventId, round, participantId } = req.params;
+
+        // Trim the participantId to remove any leading/trailing spaces
+        const trimmedParticipantId = participantId.trim();
+
+        // Validate that the participantId is a valid ObjectId
+        if (!mongoose.isValidObjectId(trimmedParticipantId)) {
+            return res.status(400).json({ message: "Invalid participant ID" });
+        }
+
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        let previousGrades = await Grade.find({ event: eventId });
+        let maxRound = previousGrades.length > 0 ? Math.max(...previousGrades.map(g => g.round)) : 0;
+
+        let grades = await Grade.find({ event: eventId, round });
+        let grade = grades.length > 0 ? grades[0] : null;
+
+        if (!grade) {
+            grade = new Grade({ event: eventId, round: maxRound + 1, users: [], teams: [] });
+        } else {
+            grade.teams = grade.teams || [];
+            grade.users = grade.users || [];
+        }
+
+        if (event.type === 'Team') {
+            const teamIndex = grade.teams.findIndex(t => t.id.toString() === trimmedParticipantId);
+            if (teamIndex !== -1) {
+                grade.teams[teamIndex].isDisqualified = !grade.teams[teamIndex].isDisqualified;
+            } else {
+                grade.teams.push({ id: trimmedParticipantId, isDisqualified: true });
+            }
+        } else {
+            const userIndex = grade.users.findIndex(u => u.id.toString() === trimmedParticipantId);
+            if (userIndex !== -1) {
+                grade.users[userIndex].isDisqualified = !grade.users[userIndex].isDisqualified;
+            } else {
+                grade.users.push({ id: trimmedParticipantId, isDisqualified: true });
+            }
+        }
+
+        await grade.save();
+        return res.redirect(`/admin/grade-participants/${eventId}/${round}`);
+        // return res.status(200).json({ message: "Participant qualification status updated successfully" });
+
+    } catch (error) {
+        console.error('Error changing qualification status of participant:', error);
+        return res.status(500).render('error', {
+            message: 'Error changing qualification status of participant',
+            error: process.env.NODE_ENV === 'development' ? error : {}
+        });
+    }
+};
+
+// module.exports.submitPoints = async (req, res) => {
+//     try {
+//         const { eventId, round } = req.params;
+//         const { grades } = req.body; // grades should be an array of { participantId, points }
+
+//         // Find the event
+//         const event = await Event.findById(eventId);
+//         if (!event) {
+//             return res.status(404).json({ message: "Event not found" });
+//         }
+
+//         // Find or create the grade document for the current round
+//         let grade = await Grade.findOne({ event: eventId, round: parseInt(round) });
+//         if (!grade) {
+//             grade = new Grade({ event: eventId, round: parseInt(round), users: [], teams: [] });
+//         }
+
+//         // Update points for each participant
+//         grades.forEach(g => {
+//             if (event.type === 'Team') {
+//                 const teamIndex = grade.teams.findIndex(t => t.id.toString() === g.participantId);
+//                 if (teamIndex !== -1) {
+//                     grade.teams[teamIndex].grade = g.points;
+//                 } else {
+//                     grade.teams.push({ id: g.participantId, grade: g.points, isDisqualified: false });
+//                 }
+//             } else {
+//                 const userIndex = grade.users.findIndex(u => u.id.toString() === g.participantId);
+//                 if (userIndex !== -1) {
+//                     grade.users[userIndex].grade = g.points;
+//                 } else {
+//                     grade.users.push({ id: g.participantId, grade: g.points, isDisqualified: false });
+//                 }
+//             }
+//         });
+
+//         // Save the updated grade document
+//         await grade.save();
+//         return res.status(200).json({ message: "Points submitted successfully" });
+
+//     } catch (error) {
+//         console.error('Error submitting points:', error);
+//         return res.status(500).json({ message: 'Error submitting points' });
+//     }
+// };
+module.exports.submitPoints = async (req, res) => {
+    try {
+        const { eventId, round } = req.params;
+        const { grades } = req.body;
+
+        console.log("Received grades:", grades);
+
+        if (!Array.isArray(grades)) {
+            return res.status(400).json({ message: "Invalid data format" });
+        }
+
+        // Find the event
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        // Find or create the grade document for the current round
+        let gradeDoc = await Grade.findOne({ event: eventId, round: parseInt(round) });
+        if (!gradeDoc) {
+            gradeDoc = new Grade({ event: eventId, round: parseInt(round), users: [], teams: [] });
+        }
+
+        // Ensure IDs are properly formatted
+        const isTeamEvent = event.type === 'Team';
+
+        grades.forEach(g => {
+            const participantId = g.participantId.toString();
+            const points = g.points; // Fix incorrect field
+
+            if (isTeamEvent) {
+                let team = gradeDoc.teams.find(t => t.id.toString() === participantId);
+                if (team) {
+                    team.grade = points;
+                } else {
+                    gradeDoc.teams.push({ id: participantId, grade: points, isDisqualified: false });
+                }
+            } else {
+                let user = gradeDoc.users.find(u => u.id.toString() === participantId);
+                if (user) {
+                    user.grade = points;
+                } else {
+                    gradeDoc.users.push({ id: participantId, grade: points, isDisqualified: false });
+                }
+            }
+        });
+
+        // Mark document as modified before saving
+        gradeDoc.markModified('users');
+        gradeDoc.markModified('teams');
+
+        // Save the updated grade document
+        await gradeDoc.save();
+        return res.status(200).json({ message: "Grades submitted successfully" });
+
+    } catch (error) {
+        console.error('Error submitting grades:', error);
+        return res.status(500).json({ message: 'Error submitting grades' });
+    }
+};
+
+
+
+module.exports.editRoundDetailsPage = async (req, res) => {
+    try {
+        const { eventId, round } = req.params;
+
+        // Find the event
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        // Fetch the grade document for the current round
+        const grade = await Grade.findOne({ event: eventId, round: parseInt(round) });
+
+        // Fetch all registrations for the event
+        const allRegs = await EventRegistration.find({ event: eventId }).populate('userId teamId');
+
+        // Render the EJS template with the correct data
+        return res.render('admin/grade/editRoundDetails.ejs', {
+            allRegs,
+            event,
+            grade,
+            currentRound: parseInt(round)
+        });
+
+    } catch (error) {
+        console.error('Error fetching round details for editing:', error);
+        return res.status(500).render('error', {
+            message: 'Error fetching round details for editing',
+            error: process.env.NODE_ENV === 'development' ? error : {}
+        });
+    }
+};

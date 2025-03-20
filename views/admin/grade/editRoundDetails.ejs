@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Round Details - <%= event.name %> - Round <%= currentRound %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th, .users-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .users-table th {
+            background-color: #f4f4f4;
+        }
+
+        .disqualify-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .disqualify-btn.qualified {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <h2>Edit Round Details - <%= event.name %> - Round <%= currentRound %></h2>
+        </div>
+
+        <div class="users-table-container">
+            <% if (allRegs.length === 0) { %>
+                <div class="no-data-message-full">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>No Registrations Found</h3>
+                    <p>There are no registrations yet.</p>
+                </div>
+            <% } else { %>
+                <form action="/admin/grade-participants/<%= event._id %>/<%= currentRound %>/submit-points" method="post">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th width="25%"><% if(event.type==='Team'){ %> Team <% } %> Name</th>
+                                <% if(event.type!=='Team'){ %>
+                                    <th width="25%">Email</th>
+                                <% } %>
+                                <th width="15%">Points</th>
+                                <th width="15%">Disqualify</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% allRegs.forEach(reg => { %>
+                                <tr>
+                                    <% if(event.type==='Team'){ %>
+                                        <td><%= reg.teamId.name %></td>
+                                    <% } else { %>
+                                        <td><%= reg.userId.name %></td>
+                                    <% } %>
+                                    <% if(event.type!=='Team'){ %>
+                                        <td><%= reg.userId.email %></td>
+                                    <% } %>
+                                    <td>
+                                        <input type="number" min="0" name="grades[<%= event.type === 'Team' ? reg.teamId._id : reg.userId._id %>]" 
+                                            value="<%= grade ? (event.type === 'Team' ? grade.teams.find(t => t.id.toString() === reg.teamId._id.toString())?.grade : grade.users.find(u => u.id.toString() === reg.userId._id.toString())?.grade) : 0 %>" 
+                                            style="border-radius: 5px; border: 1px solid rgba(53, 53, 53, 0.582);">
+                                    </td>
+                                    <td>
+                                        <% 
+                                            let isDisqualified = false;
+                                            if (grade) {
+                                                if (event.type === 'Team') {
+                                                    isDisqualified = grade.teams.some(t => t.id.toString() === reg.teamId._id.toString() && t.isDisqualified);
+                                                } else {
+                                                    isDisqualified = grade.users.some(u => u.id.toString() === reg.userId._id.toString() && u.isDisqualified);
+                                                }
+                                            }
+                                        %>
+                                        <% if (isDisqualified) { %>
+                                            <span style="color: red; font-weight: bold;">Disqualified</span>
+                                        <% } else { %>
+                                            <a href="/admin/grade-participants/<%= event._id %>/<%= currentRound %>/toggle-qualify/<% if(event.type==='Team'){ %><%= reg.teamId._id %><% } else { %><%= reg.userId._id %><% } %>" 
+                                                class="disqualify-btn">Disqualify</a>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                    <br>
+                    <center>
+                        <button type="submit" class="btn">Submit grades</button>
+                    </center>
+                </form>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>
+
+<!-- 
+user- 67dc0337c840155a9e1b6da5
+team- 67dbf78dc840155a9e1b5f70
+-->

@@ -61,6 +61,7 @@
                 <!-- Team Members -->
                 <h5 class="text-muted mb-3">Team Members</h5>
                 <div class="list-group">
+                    <% if(team.teamMembers.length>0){ %>
                     <% team.teamMembers.forEach(member => { %>
                         <div class="list-group-item d-flex align-items-center gap-3">
                             <img src="<%= member.picture %>" 
@@ -77,10 +78,12 @@
                             </a>
                         </div>
                     <% }); %>
+                    <% } else { %>
+                        <div>No Team Members</div>
+                    <% } %>
                 </div>
-
                 <!-- Payment Section -->
-                <% if (team.paymentProof) { %>
+                <% if (team.paymentProof && team.eventRegistered.registrationAmount!==0) { %>
                     <div class="mt-4">
                         <h5 class="text-muted mb-3">Payment Proof</h5>
                         <button class="btn btn-primary" onclick="showPaymentProof()">
@@ -93,21 +96,22 @@
     </div>
 
     <!-- Payment Proof Modal -->
-    <div class="modal fade" id="paymentProofModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Payment Proof</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img src="<%= team.paymentProof?.url %>" 
-                         alt="Payment Proof" 
-                         style="max-width: 100%; max-height: 80vh;">
+  
+        <div class="modal fade" id="paymentProofModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Payment Proof</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="<%= team.paymentProof?.url %>" 
+                             alt="Payment Proof" 
+                             style="max-width: 100%; max-height: 80vh;">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>

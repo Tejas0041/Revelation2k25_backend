@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Participants - <%= event.name %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 15px;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: #2980b9;
+        }
+
+        .new-round {
+            background: #2ecc71;
+        }
+
+        .new-round:hover {
+            background: #27ae60;
+        }
+
+        .disqualify-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .disqualify-btn.qualified {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="page-header">
+            <h2>Grade Participants - <%= event.name %> - Round <%= currentRound %></h2>
+        </div>
+
+        <!-- Tabs for Round Navigation -->
+        <div class="tabs">
+            <% if (allGrades.length > 0) { %>
+                <% allGrades.forEach(grade => { %>
+                    <a href="/admin/grade-participants/<%= event._id %>/<%= grade.round %>" class="tab-btn <%= grade.round === currentRound ? 'active' : '' %>">
+                        Round <%= grade.round %>
+                    </a>
+                <% }) %>
+                <a href="/admin/grade-participants/<%= event._id %>/<%= allGrades[allGrades.length - 1].round + 1 %>" class="tab-btn new-round">
+                    New Round
+                </a>
+            <% } else { %>
+                <a href="/admin/grade-participants/<%= event._id %>/1" class="tab-btn active">
+                    Round 1
+                </a>
+            <% } %>
+        </div>
+
+        <!-- Participants Table -->
+        <div class="users-table-container">
+            <% if (allRegs.length === 0) { %>
+                <div class="no-data-message-full">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>No Registrations Found</h3>
+                    <p>There are no registrations yet.</p>
+                </div>
+            <% } else { %>
+                <form id="gradeForm" action="/admin/grade-participants/<%= event._id %>/<%= currentRound %>/submit-points" method="post">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th width="25%"><% if(event.type==='Team'){ %> Team <% } %> Name</th>
+                                <% if(event.type!=='Team'){ %>
+                                    <th width="25%">Email</th>
+                                <% } %>
+                                <th width="10%">Points</th>
+                                <% if(event.type!=='Team'){ %>
+                                    <th width="35%">Disqualify</th>
+                                <% } else {%>
+                                    <th width="20%">Disqualify</th>
+                                <% } %>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% allRegs.forEach(reg => { %>
+                                <tr>
+                                    <% if(event.type==='Team'){ %>
+                                        <td>
+                                            <a href="/admin/teams/<%= reg.teamId._id %>" style="text-decoration: none;">
+                                                <%= reg.teamId.name %>
+                                            </a>
+                                        </td>
+                                    <% } else { %>
+                                        <td>
+                                            <a href="/admin/users/<%= reg.userId._id %>" style="text-decoration: none;">
+                                                <%= reg.userId.name %>
+                                            </a>
+                                        </td>
+                                    <% } %>
+                                    <% if(event.type!=='Team'){ %>
+                                        <td><%= reg.userId.email %></td>
+                                    <% } %>
+                                    <td>
+                                        <% 
+                                            let existingGrade = null;
+                                            if (event.type === 'Team') {
+                                                existingGrade = currentRoundGrades.length > 0 ? 
+                                                    currentRoundGrades[0].teams.find(t => t.id.toString() === reg.teamId._id.toString()) 
+                                                    : null;
+                                            } else {
+                                                existingGrade = currentRoundGrades.length > 0 ? 
+                                                    currentRoundGrades[0].users.find(u => u.id.toString() === reg.userId._id.toString()) 
+                                                    : null;
+                                            }
+                                        %>
+                                        <input type="hidden" name="participantId[]" value="<%= event.type === 'Team' ? reg.teamId._id : reg.userId._id %>">
+                                        <input type="number" name="points[]" value="<%= existingGrade ? existingGrade.grade : '' %>" required>
+                                    </td>
+                                    
+                                    <td>
+                                        <% 
+                                            let isDisqualified = false;
+                                            if (currentRoundGrades.length > 0) {
+                                                if (event.type === 'Team') {
+                                                    isDisqualified = currentRoundGrades[0].teams.some(t => t.id.toString() === reg.teamId._id.toString() && t.isDisqualified);
+                                                } else {
+                                                    isDisqualified = currentRoundGrades[0].users.some(u => u.id.toString() === reg.userId._id.toString() && u.isDisqualified);
+                                                }
+                                            }
+                                        %>
+                                        <% if (isDisqualified) { %>
+                                            
+                                            <span style="color: red; font-weight: bold;">Disqualified</span>
+                                            <br>
+                                            <a href="/admin/grade-participants/<%= event._id %>/<%= currentRound %>/toggle-qualify/<% if(event.type==='Team'){ %><%= reg.teamId._id %><% } else { %><%= reg.userId._id %><% } %>" 
+                                                class="disqualify-btn" style="text-decoration: none; background-color: #27ae60;">Remove Disqualification</a>
+                                        <% } else { %>
+                                            <a href="/admin/grade-participants/<%= event._id %>/<%= currentRound %>/toggle-qualify/<% if(event.type==='Team'){ %><%= reg.teamId._id %><% } else { %><%= reg.userId._id %><% } %>" 
+                                                class="disqualify-btn" style="text-decoration: none;">Disqualify</a>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                    <br>
+                    <center>
+                        <button type="submit" class="btn">Submit grades</button>
+                    </center>
+                </form>
+            <% } %>
+        </div>
+    </div>
+</body>
+<script>
+  document.querySelector("#gradeForm").addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent normal form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    // Extract participant IDs and grades
+    const participantIds = formData.getAll("participantId[]");
+    const grades = formData.getAll("points[]");
+
+    // Construct the grades array
+    const gradesData = participantIds.map((id, index) => ({
+        participantId: id,
+        points: grades[index] ? parseInt(grades[index]) : 0
+    }));
+
+    console.log("Submitting grades:", JSON.stringify({ grades: gradesData })); // Debugging
+
+    // Send the data to the backend
+    fetch(form.action, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ grades: gradesData })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        window.location.reload(); // Refresh page after submission
+    })
+    .catch(error => console.error("Error:", error));
+});
+</script>
+</html>

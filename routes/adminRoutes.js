@@ -40,6 +40,11 @@ router.get('/teams', adminAuth, catchAsync(adminController.getAllTeamsPage));
 router.get('/teams/:id', adminAuth, catchAsync(adminController.getTeamByIdPage));
 router.get('/registrations', adminAuth, catchAsync(adminController.getAllRegistrationsPage));
 
+router.get('/grade-participants', adminAuth, catchAsync(adminController.gradeParticipantsPage));
+router.get('/grade-participants/:id/:round', adminAuth, catchAsync(adminController.gradeParticipantsOfEventPage))
+router.get('/grade-participants/:eventId/:round/toggle-qualify/:participantId', adminAuth, catchAsync(adminController.toggleQualifyParticipant))
+router.post('/grade-participants/:eventId/:round/submit-points', adminController.submitPoints);
+router.get('/grade-participants/:eventId/:round/edit', adminController.editRoundDetailsPage);
 
 // router.get('/delete-registration/:id', adminAuth, catchAsync(adminController.deleteEventRegistration))
 // router.post('/create-admin', adminController.createAdmin);
