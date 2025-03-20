@@ -883,14 +883,14 @@ module.exports.gradeParticipantsOfEventPage = async (req, res) => {
         // Fetch all registrations for the event
         let allRegs = await EventRegistration.find({ event: id }).populate('userId teamId');
 
-        // Check if there is a previous round
+        // Check if there are previous rounds
         if (currentRound > 1) {
-            const previousRound = currentRound - 1;
-            const prevRoundGrades = await Grade.find({ event: id, round: previousRound });
+            // Get all previous rounds' grades
+            const previousRoundsGrades = allGrades.filter(g => g.round < currentRound);
 
-            // Get disqualified participants from the previous round
+            // Get disqualified participants from all previous rounds
             const disqualifiedParticipants = new Set();
-            prevRoundGrades.forEach(grade => {
+            previousRoundsGrades.forEach(grade => {
                 if (event.type === 'Team') {
                     grade.teams.forEach(team => {
                         if (team.isDisqualified) disqualifiedParticipants.add(team.id.toString());
@@ -926,7 +926,6 @@ module.exports.gradeParticipantsOfEventPage = async (req, res) => {
         });
     }
 };
-
 // module.exports.toggleQualifyParticipant= async(req, res)=>{
 //     try{
 //         const {eventId, round}= req.params;
