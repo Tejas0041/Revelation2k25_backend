@@ -13,28 +13,11 @@ const { google } = require('googleapis')
 const serviceAccountKey = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
 const GoogleSheet= require("../models/googleSheetSchema.js");
 
-// const auth = new google.auth.OAuth2({
-//     clientId: credentials.web.client_id,
-//     clientSecret: credentials.web.client_secret,
-//     redirectUri: credentials.web.redirect_uris[0], // Use the first redirect URI
-// });
 const auth = new google.auth.GoogleAuth({
     credentials: serviceAccountKey,
     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
 });
 
-// const authUrl = auth.generateAuthUrl({
-//     access_type: 'offline', // Request a refresh token
-//     scope: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
-// });
-
-// console.log('Authorize this app by visiting this URL:', authUrl);
-
-// const getTokens = async (code) => {
-//     const { tokens } = await auth.getToken(code);
-//     auth.setCredentials(tokens);
-//     return tokens;
-// };
 
 const sheets = google.sheets({ version: 'v4', auth });
 const drive = google.drive({ version: 'v3', auth });
