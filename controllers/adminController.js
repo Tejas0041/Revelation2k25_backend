@@ -9,8 +9,8 @@ const streamifier = require('streamifier');
 const Grade= require("../models/gradeSchema.js");
 const mongoose = require('mongoose');
 const { google } = require('googleapis')
-// const credentials= require('../config/credentials.json');
-const serviceAccountKey= require('../config/service-account-key.json')
+
+const serviceAccountKey = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
 const GoogleSheet= require("../models/googleSheetSchema.js");
 
 // const auth = new google.auth.OAuth2({
