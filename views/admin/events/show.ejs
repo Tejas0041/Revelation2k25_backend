@@ -40,18 +40,7 @@
                     </div>
                 </div>
 
-                <% if (event.eventGif) { %>
-                    <div class="event-gif-section">
-                        <h3>GIF Preview</h3>
-                        <div class="gif-container">
-                            <img src="<%= event.eventGif.url %>" alt="Event GIF" class="event-gif">
-                            <div class="gif-overlay">
-                                <a href="<%= event.eventGif.url %>" target="_blank" class="view-full-btn">View Full GIF</a>
-                            </div>
-                        </div>
-                    </div>
-                <% } %>
-
+                
                 <!-- Content -->
                 <div class="card-body p-4">
                     <!-- Header -->
@@ -71,6 +60,9 @@
                                     Registration Closed
                                 <% } %>
                             </a>
+                            <% if(event.type==='Single' && event.registrationFrom==='website'){ %>
+                                <a href="/admin/get-event-sheet/<%= event._id %>" target="_blank" class="btn btn-primary " style="margin-right: 5px;">Get Excel Sheet</a>
+                            <% } %>
                             <a href="/admin/event/participants/<%= event._id %>" class="btn btn-primary">View Participants</a>
                         </div>
                     </div>

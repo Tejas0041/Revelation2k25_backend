@@ -8,6 +8,37 @@ const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
 const Grade= require("../models/gradeSchema.js");
 const mongoose = require('mongoose');
+const { google } = require('googleapis')
+// const credentials= require('../config/credentials.json');
+const serviceAccountKey= require('../config/service-account-key.json')
+const GoogleSheet= require("../models/googleSheetSchema.js");
+
+// const auth = new google.auth.OAuth2({
+//     clientId: credentials.web.client_id,
+//     clientSecret: credentials.web.client_secret,
+//     redirectUri: credentials.web.redirect_uris[0], // Use the first redirect URI
+// });
+const auth = new google.auth.GoogleAuth({
+    credentials: serviceAccountKey,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
+});
+
+// const authUrl = auth.generateAuthUrl({
+//     access_type: 'offline', // Request a refresh token
+//     scope: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
+// });
+
+// console.log('Authorize this app by visiting this URL:', authUrl);
+
+// const getTokens = async (code) => {
+//     const { tokens } = await auth.getToken(code);
+//     auth.setCredentials(tokens);
+//     return tokens;
+// };
+
+const sheets = google.sheets({ version: 'v4', auth });
+const drive = google.drive({ version: 'v3', auth });
+
 
 module.exports.loginPage = (req, res) => {
     return res.render('admin/login', { 
@@ -1148,5 +1179,326 @@ module.exports.editRoundDetailsPage = async (req, res) => {
             message: 'Error fetching round details for editing',
             error: process.env.NODE_ENV === 'development' ? error : {}
         });
+    }
+};
+
+// module.exports.createAndShareEventSheet = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const event = await Event.findById(id);
+
+//         if (!event) {
+//             return res.status(404).json({ message: "Event not found" });
+//         }
+
+//         // Helper function to build team rows with proper null checks
+//         const buildTeamRow = (registration, maxTeamMembers) => {
+//             const team = registration.teamId || {};
+//             const row = [
+//                 registration.event.name,
+//                 team.name || '-',
+//                 team.teamLeader?.name || '-',
+//                 team.teamLeader?.email || '-',
+//                 team.leaderPhone || '-'
+//             ];
+
+//             const members = team.teamMembers || [];
+//             for (let i = 0; i < maxTeamMembers; i++) {
+//                 row.push(members[i]?.name || '-');
+//                 row.push(members[i]?.email || '-');
+//             }
+
+//             row.push(registration.registeredAt.toLocaleString());
+//             return row;
+//         };
+
+//         // Check if a Google Sheet already exists
+//         let googleSheet = await GoogleSheet.findOne({ event: id });
+
+//         if (!googleSheet) {
+//             const spreadsheet = await sheets.spreadsheets.create({
+//                 resource: { properties: { title: `Event Registrations - ${event.name}` } }
+//             });
+
+//             const spreadsheetId = spreadsheet.data.spreadsheetId;
+//             const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+
+//             googleSheet = new GoogleSheet({ event: id, googleSheetId: spreadsheetId, googleSheetUrl: sheetUrl });
+//             await googleSheet.save();
+
+//             // Fetch registrations
+//             const registrations = await EventRegistration.find({ event: id })
+//                 .populate('event')
+//                 .populate('userId')
+//                 .populate({
+//                     path: 'teamId',
+//                     populate: { path: 'teamLeader teamMembers' }
+//                 })
+//                 .sort({ registeredAt: -1 });
+
+//             let values = [];
+//             if (event.type === 'Single') {
+//                 values.push(['Event Name', 'User Name', 'User Email', 'Phone Number', 'Registered At']);
+//                 registrations.forEach(reg => {
+//                     values.push([
+//                         reg.event.name,
+//                         reg.userId.name,
+//                         reg.userId.email,
+//                         reg.userId.phoneNumber,
+//                         reg.registeredAt.toLocaleString()
+//                     ]);
+//                 });
+//             } else if (event.type === 'Team') {
+//                 const header = ['Event Name', 'Team Name', 'Leader Name', 'Leader Email', 'Leader Phone No.'];
+//                 const maxMembers = event.teamSize.max - 1;
+                
+//                 for (let i = 1; i <= maxMembers; i++) {
+//                     header.push(`Member ${i} Name`, `Member ${i} Email`);
+//                 }
+//                 header.push('Registered At');
+//                 values.push(header);
+
+//                 registrations.forEach(reg => {
+//                     values.push(buildTeamRow(reg, maxMembers));
+//                 });
+//             }
+
+//             await sheets.spreadsheets.values.update({
+//                 spreadsheetId: googleSheet.googleSheetId,
+//                 range: 'Sheet1!A1',
+//                 valueInputOption: 'RAW',
+//                 resource: { values },
+//             });
+
+//             await sheets.spreadsheets.batchUpdate({
+//                 spreadsheetId: googleSheet.googleSheetId,
+//                 resource: { requests: [{
+//                     autoResizeDimensions: {
+//                         dimensions: {
+//                             sheetId: 0,
+//                             dimension: 'COLUMNS',
+//                             startIndex: 0,
+//                             endIndex: values[0].length,
+//                         },
+//                     },
+//                 }]},
+//             });
+
+//             await drive.permissions.create({
+//                 fileId: googleSheet.googleSheetId,
+//                 requestBody: { role: 'writer', type: 'anyone' },
+//             });
+
+//             googleSheet.lastUpdated = Date.now();
+//             await googleSheet.save();
+//             return res.send(`<a href="${googleSheet.googleSheetUrl}" target="_blank">Open Sheet</a>`);
+//         }
+
+//         // Existing sheet handling
+//         const existingData = await sheets.spreadsheets.values.get({
+//             spreadsheetId: googleSheet.googleSheetId,
+//             range: 'Sheet1!A:Z',
+//         });
+
+//         const existingRows = existingData.data.values || [];
+//         const headerRow = existingRows[0];
+//         const existingEmails = new Set();
+
+//         for (let i = 1; i < existingRows.length; i++) {
+//             const email = event.type === 'Single' ? existingRows[i][2] : existingRows[i][3];
+//             existingEmails.add(email.toLowerCase());
+//         }
+
+//         const registrations = await EventRegistration.find({ event: id })
+//             .populate('event')
+//             .populate('userId')
+//             .populate({
+//                 path: 'teamId',
+//                 populate: { path: 'teamLeader teamMembers' }
+//             })
+//             .sort({ registeredAt: -1 });
+
+//         const updatedValues = [headerRow];
+//         const maxTeamMembers = event.type === 'Team' ? event.teamSize.max - 1 : 0;
+
+//         // Step 1: Remove deleted entries with proper null checks
+//         const seenEmails = new Set();
+//         for (let i = 1; i < existingRows.length; i++) {
+//             const row = existingRows[i];
+//             const email = (event.type === 'Single' ? row[2] : row[3])?.toLowerCase();
+            
+//             const exists = registrations.some(reg => {
+//                 if (event.type === 'Single') {
+//                     return reg.userId.email.toLowerCase() === email;
+//                 } else {
+//                     return reg.teamId?.teamLeader?.email?.toLowerCase() === email;
+//                 }
+//             });
+
+//             // Prevent duplicate entries
+//             if (exists && !seenEmails.has(email)) {
+//                 updatedValues.push(row);
+//                 seenEmails.add(email);
+//             }
+//         }
+
+//         // Step 2: Add new entries with email deduplication
+//         registrations.forEach(registration => {
+//             const email = event.type === 'Single' 
+//                 ? registration.userId.email.toLowerCase()
+//                 : registration.teamId?.teamLeader?.email?.toLowerCase();
+
+//             if (email && !existingEmails.has(email)) {
+//                 const row = event.type === 'Single' ? [
+//                     registration.event.name,
+//                     registration.userId.name,
+//                     registration.userId.email,
+//                     registration.userId.phoneNumber,
+//                     registration.registeredAt.toLocaleString()
+//                 ] : buildTeamRow(registration, maxTeamMembers);
+                
+//                 if (!updatedValues.some(r => r[event.type === 'Single' ? 2 : 3]?.toLowerCase() === email)) {
+//                     updatedValues.push(row);
+//                 }
+//             }
+//         });
+
+//         // Step 3: Update sheet
+//         await sheets.spreadsheets.values.update({
+//             spreadsheetId: googleSheet.googleSheetId,
+//             range: 'Sheet1!A1',
+//             valueInputOption: 'RAW',
+//             resource: { values: updatedValues },
+//         });
+
+//         await sheets.spreadsheets.batchUpdate({
+//             spreadsheetId: googleSheet.googleSheetId,
+//             resource: { requests: [{
+//                 autoResizeDimensions: {
+//                     dimensions: {
+//                         sheetId: 0,
+//                         dimension: 'COLUMNS',
+//                         startIndex: 0,
+//                         endIndex: updatedValues[0].length,
+//                     },
+//                 },
+//             }]},
+//         });
+
+//         googleSheet.lastUpdated = Date.now();
+//         await googleSheet.save();
+//         res.send(`<a href="${googleSheet.googleSheetUrl}" target="_blank">Open Sheet</a>`);
+
+//     } catch (error) {
+//         console.error('Error:', error);
+//         res.status(500).send('Error processing sheet');
+//     }
+// };
+
+module.exports.createAndShareEventSheet = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const event = await Event.findById(id);
+
+        if (!event || event.type !== 'Single') {
+            return res.status(404).json({ message: "Cant create excel for this" });
+        }
+
+        let googleSheet = await GoogleSheet.findOne({ event: id });
+
+        if (!googleSheet) {
+            const spreadsheet = await sheets.spreadsheets.create({
+                resource: { properties: { title: `Event Registrations - ${event.name}` } }
+            });
+
+            googleSheet = new GoogleSheet({
+                event: id,
+                googleSheetId: spreadsheet.data.spreadsheetId,
+                googleSheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheet.data.spreadsheetId}`
+            });
+            await googleSheet.save();
+        }
+
+        // Get existing sheet data
+        const existingData = await sheets.spreadsheets.values.get({
+            spreadsheetId: googleSheet.googleSheetId,
+            range: 'Sheet1!A:Z',
+        });
+
+        const existingRows = existingData.data.values || [];
+        const header = existingRows[0] || ['Event Name', 'User Name', 'User Email', 'Phone Number', 'Registered At'];
+        const existingEmails = new Set(existingRows.slice(1).map(row => row[2]?.toLowerCase()));
+
+        // Get current registrations
+        const registrations = await EventRegistration.find({ event: id })
+            .populate('userId')
+            .sort({ registeredAt: -1 });
+
+        // Prepare updated data
+        const updatedValues = [header];
+
+        // Update existing rows with clickable emails
+        existingRows.slice(1).forEach(row => {
+            const email = row[2]?.toLowerCase();
+            if (existingEmails.has(email)) {
+                updatedValues.push([
+                    row[0], // Event Name
+                    row[1], // User Name
+                    `=HYPERLINK("mailto:${email}", "${email}")`, // Make email clickable
+                    row[3], // Phone Number
+                    row[4]  // Registered At
+                ]);
+            }
+        });
+
+        // Add new registrations
+        registrations.forEach(registration => {
+            const email = registration.userId.email.toLowerCase();
+            if (!existingEmails.has(email)) {
+                updatedValues.push([
+                    event.name,
+                    registration.userId.name,
+                    `=HYPERLINK("mailto:${email}", "${email}")`,
+                    registration.userId.phoneNumber,
+                    registration.registeredAt.toLocaleString()
+                ]);
+            }
+        });
+
+        // Update sheet
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: googleSheet.googleSheetId,
+            range: 'Sheet1!A1',
+            valueInputOption: 'USER_ENTERED',
+            resource: { values: updatedValues },
+        });
+
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId: googleSheet.googleSheetId,
+            resource: { requests: [{
+                autoResizeDimensions: {
+                    dimensions: {
+                        sheetId: 0,
+                        dimension: 'COLUMNS',
+                        startIndex: 0,
+                        endIndex: header.length
+                    }
+                }
+            }]}
+        });
+
+        await drive.permissions.create({
+            fileId: googleSheet.googleSheetId,
+            requestBody: { role: 'writer', type: 'anyone' }
+        });
+
+        googleSheet.lastUpdated = Date.now();
+        await googleSheet.save();
+
+        return res.redirect(googleSheet.googleSheetUrl);
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error processing sheet');
     }
 };
