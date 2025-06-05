@@ -50,7 +50,7 @@
                                     </span>
                                 </h3>
                                 <% if (team.eventRegistered) { %>
-                                    <div class="event-badge">
+                                    <div class="event-badge" style="background-color: transparent !important;">
                                         <%= team.eventRegistered.name %>
                                     </div>
                                 <% } %>
@@ -58,17 +58,25 @@
                         </div>
 
                         <div class="team-members-preview">
-                            <div class="leader-info">
+                            <div class="leader-info" style="background-color: transparent !important;">
                                 <small class="text-muted">Team Leader</small>
-                                <div class="member-row">
-                                    <div class="member-details">
-                                        <div class="member-name"><%= team.teamLeader.name %></div>
-                                        <div class="member-email"><%= team.teamLeader.email %></div>
+                                <div class="member-row" style="background-color: transparent !important;">
+                                    <div class="member-details" style="background-color: transparent !important;">
+                                        <div class="member-name" style="background-color: transparent !important; text-decoration: none !important;">
+                                            <a href="/admin/users/<%=team.teamLeader._id%>" target="_blank" style="color: inherit; text-decoration: none;">
+                                                <%= team.teamLeader.name %>
+                                            </a>
+                                        </div>
+                                        <div class="member-email">
+                                            <a href="/admin/users/<%=team.teamLeader._id%>" target="_blank" style="color: inherit; text-decoration: none;">
+                                                <%= team.teamLeader.email %>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="members-count">
+                            <div class="members-count" style="background-color: transparent !important;">
                                 <small class="text-muted">Team Size</small>
                                 <div><%= team.teamMembers.length + 1 %> members</div>
                             </div>

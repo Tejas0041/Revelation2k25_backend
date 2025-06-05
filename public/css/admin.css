@@ -2116,7 +2116,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .logout-btn:hover {
-    background: #ef4444 !important;
+    background: #ff6666 !important;
     color: #ffffff !important;
 }
 
@@ -2268,7 +2268,7 @@ a:not(.btn):hover {
 
 /* Fix headings */
 .page-header {
-    background: #18181b !important;
+    background: transparent !important;
     border-radius: 12px !important;
     padding: 16px 24px !important;
     margin-bottom: 24px !important;

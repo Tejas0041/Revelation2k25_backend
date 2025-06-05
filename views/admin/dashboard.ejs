@@ -62,6 +62,7 @@
                     <h3>Events</h3>
                     <div class="total-badge"><%= stats.eventTypes.total %> Total</div>
                 </div>
+                <hr>
                 <div class="stat-breakdown">
                     <div class="stat-item">
                         <span class="label">Single Events</span>
@@ -84,6 +85,7 @@
                     <h3>Users</h3>
                     <div class="total-badge"><%= stats.users.total %> Total</div>
                 </div>
+                <hr>
                 <div class="stat-breakdown">
                     <div class="stat-item iiestian">
                         <span class="label">IIEST Students</span>
@@ -102,6 +104,7 @@
                     <h3>Registrations</h3>
                     <div class="total-badge"><%= stats.registrations.total %> Total</div>
                 </div>
+                <hr>
                 <div class="stat-breakdown">
                     <div class="stat-item">
                         <span class="label">Individual</span>
@@ -141,17 +144,6 @@
                                     <span class="value"><%= event.registrations.total %></span>
                                 </div>
                                 
-                                <% if (event.type !== 'Single') { %>
-                                    <div class="stat-row">
-                                        <span class="label">Individual</span>
-                                        <span class="value"><%= event.registrations.individual %></span>
-                                    </div>
-                                    <div class="stat-row">
-                                        <span class="label">Team</span>
-                                        <span class="value"><%= event.registrations.team %></span>
-                                    </div>
-                                <% } %>
-
                                 <div class="college-breakdown">
                                     <div class="stat-row iiestian">
                                         <span class="label">IIEST</span>

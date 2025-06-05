@@ -53,6 +53,18 @@
         .disqualify-btn.qualified {
             background-color: #28a745;
         }
+        /* Chrome, Safari, Edge, Opera */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+}
+
     </style>
 </head>
 <body>
@@ -65,15 +77,15 @@
         <div class="tabs">
             <% if (allGrades.length > 0) { %>
                 <% allGrades.forEach(grade => { %>
-                    <a href="/admin/grade-participants/<%= event._id %>/<%= grade.round %>" class="tab-btn <%= grade.round === currentRound ? 'active' : '' %>">
+                    <a href="/admin/grade-participants/<%= event._id %>/<%= grade.round %>" class=" btn tab-btn <%= grade.round === currentRound ? 'active' : '' %>">
                         Round <%= grade.round %>
                     </a>
                 <% }) %>
-                <a href="/admin/grade-participants/<%= event._id %>/<%= allGrades[allGrades.length - 1].round + 1 %>" class="tab-btn new-round">
+                <a href="/admin/grade-participants/<%= event._id %>/<%= allGrades[allGrades.length - 1].round + 1 %>" class="btn tab-btn new-round">
                     New Round
                 </a>
             <% } else { %>
-                <a href="/admin/grade-participants/<%= event._id %>/1" class="tab-btn active">
+                <a href="/admin/grade-participants/<%= event._id %>/1" class="btn tab-btn active">
                     Round 1
                 </a>
             <% } %>
@@ -98,9 +110,9 @@
                                 <% } %>
                                 <th width="10%">Points</th>
                                 <% if(event.type!=='Team'){ %>
-                                    <th width="35%">Disqualify</th>
+                                    <th style="color: white !important;" width="35%">Disqualify</th>
                                 <% } else {%>
-                                    <th width="20%">Disqualify</th>
+                                    <th style="color: white !important;" width="20%">Disqualify</th>
                                 <% } %>
                             </tr>
                         </thead>
@@ -109,7 +121,7 @@
                                 <tr>
                                     <% if(event.type==='Team'){ %>
                                         <td>
-                                            <a href="/admin/teams/<%= reg.teamId._id %>" style="text-decoration: none;">
+                                            <a href="/admin/teams/<%= reg.teamId._id %>" style="text-decoration: none; color: rgba(255, 49, 49, 0.911) !important; font-weight: 500;" >
                                                 <%= reg.teamId.name %>
                                             </a>
                                         </td>
@@ -137,7 +149,8 @@
                                             }
                                         %>
                                         <input type="hidden" name="participantId[]" value="<%= event.type === 'Team' ? reg.teamId._id : reg.userId._id %>">
-                                        <input type="number" name="points[]" value="<%= existingGrade ? existingGrade.grade : '' %>" required>
+                                            <input type="number" style="border-radius: 5px; -moz-appearance: textfield;" name="points[]" value="<%= existingGrade ? existingGrade.grade : '' %>" required onwheel="this.blur()">
+
                                     </td>
                                     
                                     <td>
@@ -152,14 +165,13 @@
                                             }
                                         %>
                                         <% if (isDisqualified) { %>
-                                            
-                                            <span style="color: red; font-weight: bold;">Disqualified</span>
+                                            <span style="color: red; font-weight: bold;">DISQUALIFIED</span>
                                             <br>
                                             <a href="/admin/grade-participants/<%= event._id %>/<%= currentRound %>/toggle-qualify/<% if(event.type==='Team'){ %><%= reg.teamId._id %><% } else { %><%= reg.userId._id %><% } %>" 
-                                                class="disqualify-btn" style="text-decoration: none; background-color: #27ae60;">Remove Disqualification</a>
+                                                class="btn" style="text-decoration: none; background-color: #27ae60 !important; box-shadow: 2px 2px 5px #2dff8457 !important; margin-top: 5px;">Remove Disqualification</a>
                                         <% } else { %>
                                             <a href="/admin/grade-participants/<%= event._id %>/<%= currentRound %>/toggle-qualify/<% if(event.type==='Team'){ %><%= reg.teamId._id %><% } else { %><%= reg.userId._id %><% } %>" 
-                                                class="disqualify-btn" style="text-decoration: none;">Disqualify</a>
+                                                class="disqualify-btn btn">Disqualify</a>
                                         <% } %>
                                     </td>
                                 </tr>
@@ -209,5 +221,13 @@
     })
     .catch(error => console.error("Error:", error));
 });
+
+document.querySelectorAll('input[type=number]').forEach(el => {
+    el.addEventListener('wheel', function(e) {
+        e.preventDefault();
+    });
+});
+
 </script>
 </html>
+

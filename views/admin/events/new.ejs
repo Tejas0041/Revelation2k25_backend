@@ -15,7 +15,7 @@
         <form action="/admin/event/new" method="POST" enctype="multipart/form-data" class="event-form">
             <div class="form-group">
                 <label for="name">Event Name:</label>
-                <input type="text" id="name" name="name" required 
+                <input style="border-radius: 3px;" type="text" id="name" name="name" required 
                     value="<%= formData ? formData.name : '' %>">
             </div>
             
@@ -74,25 +74,25 @@
 
             <div class="form-group">
                 <label for="venue">Venue:</label>
-                <input type="text" id="venue" name="venue" required
+                <input  style="border-radius: 3px;" type="text" id="venue" name="venue" required
                     value="<%= formData ? formData.venue : '' %>">
             </div>
 
             <div class="form-group">
                 <label for="registrationAmount">Registration Amount (₹):</label>
-                <input type="number" id="registrationAmount" name="registrationAmount" required min="0"
+                <input  style="border-radius: 3px;" type="number" id="registrationAmount" name="registrationAmount" required min="0"
                     value="<%= formData ? formData.registrationAmount : '' %>">
             </div>
 
             <div class="form-group">
                 <label for="prizePool">Prize Pool (₹):</label>
-                <input type="number" id="prizePool" name="prizePool" required min="0"
+                <input  style="border-radius: 3px;" type="number" id="prizePool" name="prizePool" required min="0"
                     value="<%= formData ? formData.prizePool : '' %>">
             </div>
 
-            <div class="form-group">
-                <label for="registrationFrom">Registration From:</label>
-                <select id="registrationFrom" name="registrationFrom" required onchange="toggleRegistrationLink()">
+            <div class="form-group" style="display: flex;">
+                <label for="registrationFrom">Registration From: </label>
+                <select style="width: 20%; margin-left: 6px; height: 37px;" id="registrationFrom" name="registrationFrom" required onchange="toggleRegistrationLink()">
                     <option value="website">Website</option>
                     <option value="external">External Link</option>
                     <option value="notReq">Not Required</option>
@@ -108,7 +108,7 @@
             <div class="form-group">
                 <label for="poster">Event Poster</label>
                 <div class="file-input-container">
-                    <label class="file-input-label">
+                    <label class="file-input-label" style="color: black !important;">
                         <svg viewBox="0 0 24 24">
                             <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
                         </svg>
@@ -122,7 +122,7 @@
             <div class="form-group">
                 <label for="backgroundImage">Background Image</label>
                 <div class="file-input-container">
-                    <label class="file-input-label">
+                    <label class="file-input-label" style="color: black !important;">
                         <svg viewBox="0 0 24 24">
                             <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
                         </svg>
@@ -136,7 +136,7 @@
             <div class="form-group">
                 <label for="eventGif">Event GIF</label>
                 <div class="file-input-container">
-                    <label class="file-input-label">
+                    <label class="file-input-label" style="color: black !important;">
                         <svg viewBox="0 0 24 24">
                             <path fill="currentColor" d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
                         </svg>
@@ -147,7 +147,7 @@
                 </div>
             </div>
             
-            <button type="submit">Create Event</button>
+            <button type="submit" class="btn btn-danger">Create Event</button>
         </form>
     </div>
 

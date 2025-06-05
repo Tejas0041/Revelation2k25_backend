@@ -25,14 +25,14 @@
      class="user-avatar">
                     <div class="profile-info">
                         <div class="d-flex align-items-center gap-3 mb-2">
-                            <h1 class="mb-0"><%= user.name %></h1>
+                            <h1 class="mb-0" style="color: rgba(255, 59, 59, 0.945) !important;"><%= user.name %></h1>
                             <span class="badge <%= user.isIIESTian ? 'badge-iiestian' : 'badge-non-iiestian' %>">
                                 <%= user.isIIESTian ? 'IIEST Student' : 'Non-IIEST' %>
                             </span>
                         </div>
-                        <p class="text-secondary mb-1"><%= user.email %></p>
+                        <p class="text-secondary mb-1" style="color: rgba(250, 72, 72, 0.849) !important;"><%= user.email %></p>
                         <% if (user.phoneNumber) { %>
-                            <p class="text-secondary mb-0"><%= user.phoneNumber %></p>
+                            <p class="text-secondary mb-0" style="color: rgba(247, 87, 87, 0.849) !important;"><%= user.phoneNumber %></p>
                         <% } %>
                     </div>
                 </div>
@@ -44,8 +44,17 @@
             <div class="card-body">
                 <div class="section-header">
                     <div class="title-count">
-                        <h2 class="card-title h4 mb-0">Registered Events</h2>
-                        <span class="total-count"><%= registrations.individual.length + registrations.team.length %> Events</span>
+                        <h2 class="card-title h4 mb-0">Registered <% if ((registrations.individual.length + registrations.team.length) ===1) { %>
+                            Event
+                        <% } else {%>
+                            Events
+                            <% } %>
+                        </h2>
+                        <span class="total-count" style="color: rgba(253, 16, 16, 0.89) !important;"><%= registrations.individual.length + registrations.team.length %> <% if ((registrations.individual.length + registrations.team.length) ===1) { %>
+                            Event
+                        <% } else {%>
+                            Events
+                            <% } %></span>
                     </div>
                 </div>
                 
@@ -64,8 +73,8 @@
                                 <div class="event-number">#<%= index + 1 %></div>
                                 <div class="event-info">
                                     <div class="registration-meta">
-                                        <span class="registration-time">
-                                            <i class="far fa-clock"></i>
+                                        <span class="registration-time" style="color: rgba(255, 255, 255, 0.877) !important;">
+                                             <i class="far fa-clock"></i>
                                             Registered on <%= new Date(reg.registeredAt).toLocaleString('en-US', {
                                                 hour: 'numeric',
                                                 minute: '2-digit',
@@ -75,14 +84,16 @@
                                                 year: 'numeric'
                                             }) %>
                                         </span>
-                                        <span><%= reg.event.name %></span>
+                                        <span style="color: #ec0909 !important; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.795);"><%= reg.event.name %></span>
                                         <% if (reg.team) { %>
-                                            <span class="type-badge team">Team</span>
-                                            <a href="/admin/teams/<%= reg.team._id %>" class="team-name">
-                                                <%= reg.team.name %>
-                                            </a>
+                                            <span class="type-badge team" style="color: rgba(255, 0, 0, 0.904) !important;">
+                                                Team : 
+                                                <a href="/admin/teams/<%= reg.team._id %>" class="team-name" style="color: rgba(255, 0, 0, 0.904) !important;">
+                                                    <%= reg.team.name %>
+                                                </a>
+                                                </span>
                                         <% } else { %>
-                                            <span class="type-badge individual">Individual</span>
+                                            <span  style="color: rgba(255, 0, 0, 0.918) !important;" class="type-badge individual">Individual</span>
                                         <% } %>
                                     </div>
                                 </div>

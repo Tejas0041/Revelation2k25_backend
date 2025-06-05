@@ -107,7 +107,8 @@
             padding: 0;
         }
 
-        .login-btn {
+        .login-btn,
+        #auto-fill {
             width: 100%;
             padding: 12px;
             font-size: 16px;
@@ -119,12 +120,30 @@
             color: #fff !important;
             border: none;
             border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 24px rgba(239,68,68,0.15);
+            cursor: pointer;
             transition: all 0.2s;
+            margin-top: 10px;
         }
-
-        .login-btn:hover {
+        .login-btn {
+            width: 100%;
+        }
+        #auto-fill {
+            width: auto;
+            min-width: 100px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            box-shadow: 0 4px 24px rgba(239,68,68,0.15), 0 0 8px #ef4444;
+        }
+        .login-btn:hover,
+        #auto-fill:hover {
             background: #dc2626 !important;
+            color: #fff !important;
             transform: translateY(-1px);
+            box-shadow: 0 6px 24px #ef4444, 0 0 8px #fff;
         }
 
         .alert {
@@ -218,6 +237,11 @@
             color: #dc2626;
             text-decoration: underline;
         }
+
+        #auto-fill:hover{
+            background-color: #dc2626 !important;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -238,14 +262,14 @@
 
             <% if (locals.error) { %>
                 <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                    <i style="color: white;" class="fas fa-exclamation-circle"></i>
                     <%= error %>
                 </div>
             <% } %>
 
             <div class="form-group">
                 <label>
-                    <i class="fas fa-user"></i>
+                    <i  styldc2626e="color: white;" class="fas fa-user"></i>
                     <span>Username</span>
                 </label>
                 <input type="text" name="name" required class="form-control" placeholder="Enter username">
@@ -253,7 +277,7 @@
 
             <div class="form-group">
                 <label>
-                    <i class="fas fa-lock"></i>
+                    <i  style="color: white;" class="fas fa-lock"></i>
                     <span>Password</span>
                 </label>
                 <div class="password-input">
@@ -274,6 +298,9 @@
                     <b>Username:</b> admin@Revelation2k25
                     <br>
                     <b>Password:</b> Revelation2k25#
+                </div>
+                <div id="auto-fill">
+                    Auto Fill
                 </div>
         </form>
     </center>
@@ -334,6 +361,12 @@
                 alert('Login failed');
             }
         });
+
+        // Autofill logic
+        document.getElementById('auto-fill').onclick = function() {
+            document.querySelector('input[name="name"]').value = 'admin@Revelation2k25';
+            document.querySelector('input[name="password"]').value = 'Revelation2k25#';
+        };
     </script>
 </body>
 </html>
