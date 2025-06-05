@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
+    <div id="loader-overlay">
+        <div class="modern-loader">
+            <div class="loader-ring"></div>
+            <div class="loader-dot"></div>
+            <span class="loader-text">Loading...</span>
+        </div>
+    </div>
     <div class="admin-container">
         <div class="page-header">
             <h2>All Events</h2>
@@ -58,30 +65,30 @@
 
     <style>
         .no-data-message-full {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-top: 24px;
+            /* Remove background and color overrides, use global CSS */
         }
-
         .no-data-message-full i {
-            font-size: 48px;
-            color: #94a3b8;
-            margin-bottom: 16px;
+            /* Remove color override */
         }
-
         .no-data-message-full h3 {
-            color: #475569;
-            font-size: 1.25rem;
-            margin-bottom: 8px;
+            /* Remove color override */
         }
-
         .no-data-message-full p {
-            color: #64748b;
-            margin: 0;
+            /* Remove color override */
         }
     </style>
+    <script>
+        function showLoader() {
+            document.getElementById('loader-overlay').classList.add('active');
+        }
+        function hideLoader() {
+            document.getElementById('loader-overlay').classList.remove('active');
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            showLoader();
+            setTimeout(hideLoader, 1000);
+        });
+        // Use showLoader/hideLoader in AJAX or navigation as needed
+    </script>
 </body>
 </html>

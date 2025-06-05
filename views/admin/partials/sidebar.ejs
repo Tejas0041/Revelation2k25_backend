@@ -2,7 +2,6 @@
     <div class="sidebar-header">
         <h1 class="sidebar-title">Revelation 2k25</h1>
     </div>
-    
     <ul class="sidebar-menu">
         <li class="sidebar-item">
             <a href="/admin/dashboard" class="sidebar-link <%= path === '/dashboard' ? 'active' : '' %>">
@@ -41,7 +40,6 @@
             </a>
         </li>
     </ul>
-
     <div class="sidebar-footer">
         <a href="#" onclick="confirmLogout(event)" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i>
@@ -49,7 +47,6 @@
         </a>
     </div>
 </nav>
-
 <script>
     function confirmLogout(e) {
         e.preventDefault();
@@ -57,4 +54,12 @@
             window.location.href = '/admin/logout';
         }
     }
+    // Show loader on sidebar navigation
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (this.href && this.href !== window.location.href) {
+                if (window.showLoader) showLoader();
+            }
+        });
+    });
 </script>

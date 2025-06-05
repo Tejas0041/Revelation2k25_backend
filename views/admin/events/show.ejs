@@ -6,7 +6,7 @@
     <title><%= event.name %> - Event Details</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="bg-dark" style="background: linear-gradient(135deg, #18181b 0%, #23232b 100%) !important; color: #fff;">
     <div class="main-wrapper">
         <!-- Back Button -->
         <div class="back-nav">
@@ -16,9 +16,9 @@
         </div>
 
         <div class="container-fluid py-4" style="max-width: 1200px;">
-            <div class="card shadow">
+            <div class="card shadow" style="background: linear-gradient(135deg, #23232b 60%, #18181b 100%) !important; color: #fff;">
                 <!-- Poster and Background Images -->
-                <div class="image-gallery">
+                <div class="image-gallery" style="background: #23232b !important;">
                     <div class="image-section poster">
                         <h3>Event Poster</h3>
                         <div class="image-container">
@@ -42,7 +42,7 @@
 
                 
                 <!-- Content -->
-                <div class="card-body p-4">
+                <div class="card-body p-4" style="background: transparent !important; color: #fff;">
                     <!-- Header -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
@@ -70,19 +70,19 @@
                     <!-- Key Details -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <div class="p-3 bg-light rounded">
-                                <div class="text-muted small mb-1">Registration Fee</div>
-                                <div class="h4 mb-0 text-success">₹<%= event.registrationAmount %></div>
+                            <div class="p-3 bg-light rounded" style="background: #23232b !important; color: #fff;">
+                                <div class="text-muted small mb-1" style="color: #ef4444 !important;">Registration Fee</div>
+                                <div class="h4 mb-0 text-success" style="color: #ef4444 !important;">₹<%= event.registrationAmount %></div>
                             </div>
                             <br>
-                            <div class="p-3 bg-light rounded">
-                                <div class="text-muted small mb-1">Prize Pool</div>
-                                <div class="h4 mb-0 text-success">₹<%= event.prizePool %></div>
+                            <div class="p-3 bg-light rounded" style="background: #23232b !important; color: #fff;">
+                                <div class="text-muted small mb-1" style="color: #ef4444 !important;">Prize Pool</div>
+                                <div class="h4 mb-0 text-success" style="color: #ef4444 !important;">₹<%= event.prizePool %></div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="p-3 bg-light rounded">
-                                <div class="text-muted small mb-1">Date & Time</div>
+                            <div class="p-3 bg-light rounded" style="background: #23232b !important; color: #fff;">
+                                <div class="text-muted small mb-1" style="color: #ef4444 !important;">Date & Time</div>
                                 <div>
                                     <%= new Date(event.startTime).toLocaleDateString('en-IN', {
                                         day: 'numeric',
@@ -109,8 +109,8 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="p-3 bg-light rounded">
-                                <div class="text-muted small mb-1">Venue</div>
+                            <div class="p-3 bg-light rounded" style="background: #23232b !important; color: #fff;">
+                                <div class="text-muted small mb-1" style="color: #ef4444 !important;">Venue</div>
                                 <div><%= event.venue %></div>
                             </div>
                         </div>
@@ -140,7 +140,7 @@
                     <% if (event.type !== 'Single') { %>
                         <div class="mb-4">
                             <h5 class="border-bottom pb-2">Team Requirements</h5>
-                            <div class="p-3 bg-light rounded">
+                            <div class="p-3 bg-light rounded" style="background: #23232b !important; color: #fff;">
                                 <strong>
                                     <% if (event.teamSize.min === event.teamSize.max) { %>
                                         <%= event.teamSize.min %> <%= event.teamSize.min === 1 ? 'member' : 'members' %>
@@ -154,7 +154,7 @@
                     <% } %>
 
                     <!-- Rules -->
-                    <div class="content-section">
+                    <div class="content-section" style="background: #23232b !important; color: #fff;">
                         <h3>Rules & Guidelines</h3>
                         <div class="rules-list">
                             <% event.rules.forEach((rule, index) => { %>
@@ -171,6 +171,42 @@
     </div>
 
     <style>
+        body, .main-wrapper {
+            background: linear-gradient(135deg, #18181b 0%, #23232b 100%) !important;
+            color: #fff !important;
+        }
+        .card, .card-body, .image-gallery, .content-section, .p-3.bg-light {
+            background: #23232b !important;
+            color: #fff !important;
+        }
+        .event-type-badge, .view-full-btn {
+            background: #ef4444 !important;
+            color: #fff !important;
+        }
+        .view-full-btn:hover {
+            background: rgba(255,255,255,0.7) !important; /* more transparent */
+            color: #1e293b !important;
+        }
+        .rule-item {
+            background: #23232b !important;
+            color: #fff !important;
+        }
+        .rule-number {
+            color: #ef4444 !important;
+        }
+        .image-section h3, .event-gif-section h3 {
+            color: #ef4444 !important;
+        }
+        .image-container {
+            background: #18181b !important;
+        }
+        .image-overlay {
+            background: rgba(239, 68, 68, 0.7) !important;
+        }
+        .no-data-message-full {
+            background: #23232b !important;
+            color: #fff !important;
+        }
         .back-nav {
             position: fixed;
             top: 20px;
@@ -183,18 +219,19 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: white;
+            background: #23232b !important; /* solid dark background */
             border-radius: 8px;
             text-decoration: none;
-            color: #475569;
-            font-weight: 500;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: all 0.2s;
+            color: #ef4444 !important;
+            font-weight: 600;
+            border: 1.5px solid #ef4444 !important;
+            box-shadow: none !important;
+            transition: background 0.2s, color 0.2s;
         }
 
         .back-btn:hover {
-            background: #f8fafc;
-            transform: translateY(-1px);
+            background: #fc9c9c1a !important;
+            color: #ef4444 !important;
         }
 
         .back-btn::before {
@@ -317,11 +354,13 @@
             text-decoration: none;
             font-weight: 500;
             font-size: 0.875rem;
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, background 0.2s, color 0.2s;
         }
 
         .view-full-btn:hover {
             transform: translateY(-2px);
+            background: rgba(255,255,255,0.7) !important; /* more transparent */
+            color: #1e293b !important;
         }
 
         .event-gif-section {
@@ -367,6 +406,20 @@
 
         .gif-container:hover .gif-overlay {
             opacity: 1;
+        }
+
+        /* Improve .btn-outline-primary hover for accessibility */
+        .btn-outline-primary:hover, .btn-outline-primary:focus {
+            background: #ef4444 !important;
+            color: #fff !important;
+            border-color: #ef4444 !important;
+        }
+
+        /* Improve .btn-primary hover for accessibility */
+        .btn-primary:hover, .btn-primary:focus {
+            background: #dc2626 !important;
+            border-color: #dc2626 !important;
+            color: #fff !important;
         }
 
         @media (max-width: 768px) {
