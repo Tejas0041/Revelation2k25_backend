@@ -46,7 +46,7 @@ router.get('/grade-participants/:eventId/:round/toggle-qualify/:participantId', 
 router.post('/grade-participants/:eventId/:round/submit-points', adminController.submitPoints);
 router.get('/grade-participants/:eventId/:round/edit', adminController.editRoundDetailsPage);
 
-router.get('/get-event-sheet/:id', adminController.createAndShareEventSheet);
+// router.get('/get-event-sheet/:id', adminController.createAndShareEventSheet);
 
 // router.get('/delete-registration/:id', adminAuth, catchAsync(adminController.deleteEventRegistration))
 // router.post('/create-admin', adminController.createAdmin);

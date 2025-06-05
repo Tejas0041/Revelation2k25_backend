@@ -9,18 +9,19 @@ const streamifier = require('streamifier');
 const Grade= require("../models/gradeSchema.js");
 const mongoose = require('mongoose');
 const { google } = require('googleapis')
-
-const serviceAccountKey = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
 const GoogleSheet= require("../models/googleSheetSchema.js");
 
-const auth = new google.auth.GoogleAuth({
-    credentials: serviceAccountKey,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
-});
+// const serviceAccountKey = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
+// console.log("Service Account Key:", serviceAccountKey);
+
+// const auth = new google.auth.GoogleAuth({
+//     credentials: serviceAccountKey,
+//     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
+// });
 
 
-const sheets = google.sheets({ version: 'v4', auth });
-const drive = google.drive({ version: 'v3', auth });
+// const sheets = google.sheets({ version: 'v4', auth });
+// const drive = google.drive({ version: 'v3', auth });
 
 
 module.exports.loginPage = (req, res) => {
@@ -1376,112 +1377,112 @@ module.exports.editRoundDetailsPage = async (req, res) => {
 //         console.error('Error:', error);
 //         res.status(500).send('Error processing sheet');
 //     }
+// // };
+
+// module.exports.createAndShareEventSheet = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const event = await Event.findById(id);
+
+//         if (!event || event.type !== 'Single') {
+//             return res.status(404).json({ message: "Cant create excel for this" });
+//         }
+
+//         let googleSheet = await GoogleSheet.findOne({ event: id });
+
+//         if (!googleSheet) {
+//             const spreadsheet = await sheets.spreadsheets.create({
+//                 resource: { properties: { title: `Event Registrations - ${event.name}` } }
+//             });
+
+//             googleSheet = new GoogleSheet({
+//                 event: id,
+//                 googleSheetId: spreadsheet.data.spreadsheetId,
+//                 googleSheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheet.data.spreadsheetId}`
+//             });
+//             await googleSheet.save();
+//         }
+
+//         // Get existing sheet data
+//         const existingData = await sheets.spreadsheets.values.get({
+//             spreadsheetId: googleSheet.googleSheetId,
+//             range: 'Sheet1!A:Z',
+//         });
+
+//         const existingRows = existingData.data.values || [];
+//         const header = existingRows[0] || ['Event Name', 'User Name', 'User Email', 'Phone Number', 'Registered At'];
+//         const existingEmails = new Set(existingRows.slice(1).map(row => row[2]?.toLowerCase()));
+
+//         // Get current registrations
+//         const registrations = await EventRegistration.find({ event: id })
+//             .populate('userId')
+//             .sort({ registeredAt: -1 });
+
+//         // Prepare updated data
+//         const updatedValues = [header];
+
+//         // Update existing rows with clickable emails
+//         existingRows.slice(1).forEach(row => {
+//             const email = row[2]?.toLowerCase();
+//             if (existingEmails.has(email)) {
+//                 updatedValues.push([
+//                     row[0], // Event Name
+//                     row[1], // User Name
+//                     `=HYPERLINK("mailto:${email}", "${email}")`, // Make email clickable
+//                     row[3], // Phone Number
+//                     row[4]  // Registered At
+//                 ]);
+//             }
+//         });
+
+//         // Add new registrations
+//         registrations.forEach(registration => {
+//             const email = registration.userId.email.toLowerCase();
+//             if (!existingEmails.has(email)) {
+//                 updatedValues.push([
+//                     event.name,
+//                     registration.userId.name,
+//                     `=HYPERLINK("mailto:${email}", "${email}")`,
+//                     registration.userId.phoneNumber,
+//                     registration.registeredAt.toLocaleString()
+//                 ]);
+//             }
+//         });
+
+//         // Update sheet
+//         await sheets.spreadsheets.values.update({
+//             spreadsheetId: googleSheet.googleSheetId,
+//             range: 'Sheet1!A1',
+//             valueInputOption: 'USER_ENTERED',
+//             resource: { values: updatedValues },
+//         });
+
+//         await sheets.spreadsheets.batchUpdate({
+//             spreadsheetId: googleSheet.googleSheetId,
+//             resource: { requests: [{
+//                 autoResizeDimensions: {
+//                     dimensions: {
+//                         sheetId: 0,
+//                         dimension: 'COLUMNS',
+//                         startIndex: 0,
+//                         endIndex: header.length
+//                     }
+//                 }
+//             }]}
+//         });
+
+//         await drive.permissions.create({
+//             fileId: googleSheet.googleSheetId,
+//             requestBody: { role: 'writer', type: 'anyone' }
+//         });
+
+//         googleSheet.lastUpdated = Date.now();
+//         await googleSheet.save();
+
+//         return res.redirect(googleSheet.googleSheetUrl);
+
+//     } catch (error) {
+//         console.error('Error:', error);
+//         res.status(500).send('Error processing sheet');
+//     }
 // };
-
-module.exports.createAndShareEventSheet = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const event = await Event.findById(id);
-
-        if (!event || event.type !== 'Single') {
-            return res.status(404).json({ message: "Cant create excel for this" });
-        }
-
-        let googleSheet = await GoogleSheet.findOne({ event: id });
-
-        if (!googleSheet) {
-            const spreadsheet = await sheets.spreadsheets.create({
-                resource: { properties: { title: `Event Registrations - ${event.name}` } }
-            });
-
-            googleSheet = new GoogleSheet({
-                event: id,
-                googleSheetId: spreadsheet.data.spreadsheetId,
-                googleSheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheet.data.spreadsheetId}`
-            });
-            await googleSheet.save();
-        }
-
-        // Get existing sheet data
-        const existingData = await sheets.spreadsheets.values.get({
-            spreadsheetId: googleSheet.googleSheetId,
-            range: 'Sheet1!A:Z',
-        });
-
-        const existingRows = existingData.data.values || [];
-        const header = existingRows[0] || ['Event Name', 'User Name', 'User Email', 'Phone Number', 'Registered At'];
-        const existingEmails = new Set(existingRows.slice(1).map(row => row[2]?.toLowerCase()));
-
-        // Get current registrations
-        const registrations = await EventRegistration.find({ event: id })
-            .populate('userId')
-            .sort({ registeredAt: -1 });
-
-        // Prepare updated data
-        const updatedValues = [header];
-
-        // Update existing rows with clickable emails
-        existingRows.slice(1).forEach(row => {
-            const email = row[2]?.toLowerCase();
-            if (existingEmails.has(email)) {
-                updatedValues.push([
-                    row[0], // Event Name
-                    row[1], // User Name
-                    `=HYPERLINK("mailto:${email}", "${email}")`, // Make email clickable
-                    row[3], // Phone Number
-                    row[4]  // Registered At
-                ]);
-            }
-        });
-
-        // Add new registrations
-        registrations.forEach(registration => {
-            const email = registration.userId.email.toLowerCase();
-            if (!existingEmails.has(email)) {
-                updatedValues.push([
-                    event.name,
-                    registration.userId.name,
-                    `=HYPERLINK("mailto:${email}", "${email}")`,
-                    registration.userId.phoneNumber,
-                    registration.registeredAt.toLocaleString()
-                ]);
-            }
-        });
-
-        // Update sheet
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: googleSheet.googleSheetId,
-            range: 'Sheet1!A1',
-            valueInputOption: 'USER_ENTERED',
-            resource: { values: updatedValues },
-        });
-
-        await sheets.spreadsheets.batchUpdate({
-            spreadsheetId: googleSheet.googleSheetId,
-            resource: { requests: [{
-                autoResizeDimensions: {
-                    dimensions: {
-                        sheetId: 0,
-                        dimension: 'COLUMNS',
-                        startIndex: 0,
-                        endIndex: header.length
-                    }
-                }
-            }]}
-        });
-
-        await drive.permissions.create({
-            fileId: googleSheet.googleSheetId,
-            requestBody: { role: 'writer', type: 'anyone' }
-        });
-
-        googleSheet.lastUpdated = Date.now();
-        await googleSheet.save();
-
-        return res.redirect(googleSheet.googleSheetUrl);
-
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).send('Error processing sheet');
-    }
-};
